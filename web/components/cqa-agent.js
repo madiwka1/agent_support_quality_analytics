@@ -72,14 +72,15 @@ class CqaAgent extends HTMLElement {
     const fab = this.$('.fab');
     for (const ev of ['pointerenter', 'pointerleave', 'focus']) fab.addEventListener(ev, () => this.wake());
     this.wake();
+    for (const ev of ['pointermove', 'keydown', 'input', 'focusin', 'click']) this.$('#panel').addEventListener(ev, () => this.poke());
     this.$('#q').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) this.send(); });
     this.root.addEventListener('keydown', e => { if (e.key === 'Escape') this.toggle(false); });
   }
-  disconnectedCallback() { this.ctrl?.abort(); clearInterval(this.timer); clearTimeout(this.idle); }
-  wake() {  // after 6 s without touching it only the bird stays; it never shrinks while open or busy
+  disconnectedCallback() { this.ctrl?.abort(); clearInterval(this.timer); clearTimeout(this.idle); clearTimeout(this.away); }
+  wake() {  // after 5 s without touching it only the bird stays; it never shrinks while open or busy
     this.$('.fab').classList.remove('mini');
     clearTimeout(this.idle);
-    this.idle = setTimeout(() => { const f = this.$('.fab'); if (this.$('#panel').hidden && !this.ctrl && !f.matches(':hover')) f.classList.add('mini'); else this.wake(); }, 6000);
+    this.idle = setTimeout(() => { const f = this.$('.fab'); if (this.$('#panel').hidden && !this.ctrl && !f.matches(':hover')) f.classList.add('mini'); else this.wake(); }, 5000);
   }
 
   onClick(e) {
@@ -95,7 +96,14 @@ class CqaAgent extends HTMLElement {
     this.$('#panel').hidden = !open;
     this.$('.fab').setAttribute('aria-expanded', String(open));
     if (open) this.$('#q').focus();
-    this.wake();
+    this.wake(); this.poke();
+  }
+  poke() {  // the open panel closes after 4 s without use, but not while the model works or the pointer is over it
+    clearTimeout(this.away);
+    if (this.$('#panel').hidden) return;
+    this.away = setTimeout(() => {
+      if (!this.ctrl && !this.$('#panel').matches(':hover')) this.toggle(false); else this.poke();
+    }, 4000);
   }
   status(cls, html) { this.$('#st').innerHTML = html ? `<div class="st ${cls}">${html}</div>` : ''; }
   busy(on) {
@@ -121,12 +129,11 @@ class CqaAgent extends HTMLElement {
       const d = await r.json().catch(() => ({}));
       if (!r.ok) throw new Error(Array.isArray(d.detail) ? d.detail.map(x => x.msg).join('; ') : d.detail || 'HTTP ' + r.status);
       ed.applyDraft(d.checklist);
-      const n = d.checklist.criteria.length;
-      this.status('ok', `<b>Готово.</b> ${esc(d.notes)}<br>Критериев: ${n}, сумма весов: ${d.weight_sum}. Черновик загружен в конструктор.`);
+      this.status('ok', `<b>Готово.</b> ${esc(d.notes)}<br>Проверьте изменения в конструкторе и сохраните их.`);
     } catch (e) {
       this.status('e', e.name === 'AbortError' ? 'Запрос отменён.' : esc(e.message));
     } finally {
-      this.ctrl = null; this.busy(false); this.wake();
+      this.ctrl = null; this.busy(false); this.wake(); this.poke();
       if (this.$('#st .wait')) this.status('', '');
     }
   }
