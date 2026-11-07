@@ -6,12 +6,12 @@
   <title>Конструктор чек-листа</title>
   <style>
     body { margin: 0; background: #f5f6f7; font: 14px "Segoe UI", system-ui, sans-serif; }
-    a.back { display: inline-flex; margin: 14px 16px 0; padding: 7px 16px 7px 12px; border-radius: 999px; background: #2a8640; color: #fff; font-weight: 600; text-decoration: none; }
+    a.back { display: inline-flex; margin: 14px 16px 0; padding: 7px 18px; border-radius: 999px; background: #2a8640; color: #fff; font-weight: 600; text-decoration: none; }
     a.back:hover { background: #226d34; }
   </style>
 </head>
 <body>
-  <a class="back" href="/">&larr; Назад</a>
+  <a class="back" href="/" onclick="if (history.length > 1) { history.back(); return false; }">Назад</a>
   <!-- api-base is empty when served by FastAPI; set it to the backend URL inside Dynamics 365. -->
   <cqa-checklist-editor api-base=""></cqa-checklist-editor>
   <script>

@@ -17,7 +17,7 @@ const pill = s => `<span class="pill ${ST[s][0]}">${ST[s][1]}</span>`;
 const CSS = `
 :host{display:block;font:15px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#191919;--line:#e1e4e8;--mut:#5c5c5c;--acc:#2a8640;--accbg:#e8f5e9;--err:#d32f2f;--warn:#b26a00}
 *{box-sizing:border-box}a{color:var(--acc)}
-.back{display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;padding:7px 16px 7px 12px;border-radius:999px;background:var(--acc);color:#fff;font-weight:600;text-decoration:none;box-shadow:0 2px 6px #2a864055}.back:hover{background:#226d34}
+.back{display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;padding:7px 18px;border-radius:999px;background:var(--acc);color:#fff;font-weight:600;text-decoration:none;box-shadow:0 2px 6px #2a864055}.back:hover{background:#226d34}
 h1{margin:0;font-size:24px;font-weight:600}h3{margin:0;font-size:15px}
 .top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
 .sub{color:var(--mut);margin:4px 0 0}
@@ -163,7 +163,7 @@ class CqaAppeals extends HTMLElement {
     const d = this.detail, pending = d.status === 'pending';
     const totals = pending ? `Итог сейчас: <b>${tot(d.current_total)}</b> / ${fmt(d.max_total)}`
       : `Итог: было <b>${tot(d.original_total)}</b>, после решения <b>${tot(d.result?.total)}</b> / ${fmt(d.max_total)}`;
-    return `<div class="top"><div><a class="back" href="#/appeals">← Назад</a><h1>Апелляция ${esc(d.id)} ${pill(d.status)}</h1></div>
+    return `<div class="top"><div><a class="back" href="#/appeals">Назад</a><h1>Апелляция ${esc(d.id)} ${pill(d.status)}</h1></div>
         <a href="#/evaluations/${enc(d.evaluation_id)}">Открыть оценку</a></div>
       ${this.msg ? `<div class="note">${esc(this.msg)}</div>` : ''}
       <div class="meta"><span>Диалог: <a href="#/dialogs/${enc(d.conversation_id)}">${esc(d.conversation_id)}</a></span>

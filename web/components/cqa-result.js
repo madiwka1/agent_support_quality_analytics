@@ -60,12 +60,7 @@ button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:
 .chips{display:flex;flex-direction:column;gap:4px;margin-top:6px}
 button.chip{text-align:left;background:#f8f9fa;padding:5px 8px}
 button.chip:hover{background:var(--accbg)}button.chip.rng{color:var(--mut);background:#fff}
-.tr{position:sticky;top:12px;max-height:80vh;overflow:auto}
-audio{width:100%;margin-bottom:10px}
-.m{display:grid;grid-template-columns:28px 52px 70px 1fr;gap:6px;padding:5px 6px;border-left:3px solid transparent;border-bottom:1px solid #eceef0;white-space:pre-wrap;word-break:break-word}
-.m.operator{border-left-color:var(--acc);background:#f0f8f0}.m.bot,.m.system{color:var(--mut);font-style:italic}
-.m .n,.m .ts{color:var(--mut);font-variant-numeric:tabular-nums}.m .s{font-weight:600;font-style:normal}
-.m.hl{background:#fff3c4;outline:2px solid #e0b400;outline-offset:-2px}
+.tr{position:sticky;top:12px}.tr cqa-chat{--chat-h:72vh}
 .err{color:var(--err);padding:8px 10px;border-left:3px solid var(--err);background:#fdecec}
 `;
 
@@ -162,8 +157,6 @@ class CqaResult extends HTMLElement {
         <div class="why"><b>Обоснование</b>${esc(k.explanation)}</div>
         <div class="chips">${chips}${rng}</div>${extra}${pick}</article>`;
     }).join('');
-    const trHtml = tr.map((m, i) => `<div class="m ${esc(m.speaker)}" data-i="${i}"><span class="n">${i + 1}</span><span class="ts">${ts(m.timestamp)}</span><span class="s">${esc(SPK[m.speaker] || m.speaker)}</span><span>${esc(m.text)}</span></div>`).join('');
-    const audio = this.conv?.audio_url ? `<audio controls preload="none" src="${esc(this.conv.audio_url)}"></audio>` : '';
     this.root.innerHTML = `<style>${CSS}</style><div class="wrap">
       <div class="panel">
         <div class="head"><div class="total">${this.gauge(e)}<small>из ${fmt(e.max_total)}</small></div>
@@ -178,7 +171,8 @@ class CqaResult extends HTMLElement {
         <div class="secs">${secs_}</div>${crit}
         ${this.mode ? `<div class="abar"><span>Выбрано критериев: <b id="cnt">0</b></span><span class="aerr" id="aerr"></span>
           <button data-act="cancel">Отмена</button><button class="pri" data-act="submit">Отправить апелляцию</button></div>` : ''}</div>
-      <div class="panel tr"><h2>Транскрипт</h2>${this.err ? `<p class="err">${esc(this.err)}</p>` : ''}${audio}${trHtml}</div></div>`;
+      <div class="panel tr"><h2>Транскрипт</h2>${this.err ? `<p class="err">${esc(this.err)}</p>` : ''}<cqa-chat api-base="${esc(this.apiBase)}"></cqa-chat></div></div>`;
+    if (this.conv) this.root.querySelector('cqa-chat').conversation = this.conv;
   }
 
   onClick(e) {
@@ -218,15 +212,7 @@ class CqaResult extends HTMLElement {
     this.busy = false;
   }
 
-  goto(a, b) {
-    const box = this.root.querySelector('.tr');
-    box.querySelectorAll('.hl').forEach(x => x.classList.remove('hl'));
-    let first = null;
-    for (let i = a; i <= b; i++) { const el = box.querySelector(`[data-i="${i}"]`); if (el) { el.classList.add('hl'); first ||= el; } }
-    first?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    const au = box.querySelector('audio'), tr = this.conv?.transcript;
-    if (au && tr) { const off = secs(tr[a].timestamp) - secs(tr[0].timestamp); if (isFinite(off) && off >= 0) au.currentTime = off; }
-  }
+  goto(a, b) { this.root.querySelector('cqa-chat')?.highlight(a, b); }
 }
 customElements.define('cqa-result', CqaResult);
 })();
