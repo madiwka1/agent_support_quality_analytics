@@ -91,7 +91,12 @@ class CqaChecklistEditor extends HTMLElement {
   get apiBase() { return this.getAttribute('api-base') || ''; }
   get checklist() { return this.state; }
   set checklist(cfg) { this.load(cfg); }
-  connectedCallback() { if (!this.state) this.init(); }
+  connectedCallback() {
+    if (!this.state) this.init();
+    this.onLeave = e => { if (this.state && this.isDirty()) { e.preventDefault(); e.returnValue = ''; } };
+    window.addEventListener('beforeunload', this.onLeave);
+  }
+  disconnectedCallback() { window.removeEventListener('beforeunload', this.onLeave); }
   $(s) { return this.root.querySelector(s); }
   cur() { return this.state?.criteria.find(k => k.id === this.sel); }
 
@@ -102,6 +107,13 @@ class CqaChecklistEditor extends HTMLElement {
     this.msg = msg; this.render();
   }
   isDirty() { return JSON.stringify(this.state) !== this.saved; }
+  applyDraft(cfg) {
+    const s = this.state;
+    this.state = { ...structuredClone(cfg), id: s.id, version: s.version, created_at: s.created_at };
+    this.sel = this.state.criteria[0]?.id ?? null;
+    this.msg = { t: 'o', s: 'Черновик от ИИ загружен. Проверьте критерии и нажмите «Сохранить как новую версию». «Отменить изменения» вернёт прежний вариант.' };
+    this.render();
+  }
   weightSum() { return this.state.criteria.filter(k => k.type !== 'flag').reduce((a, k) => a + (+k.weight || 0), 0); }
 
   validate() {
@@ -118,6 +130,7 @@ class CqaChecklistEditor extends HTMLElement {
         if (v.length < 2) errors.push(`${p}: в шкале нужно минимум 2 ступени.`);
         if (new Set(v).size !== v.length) errors.push(`${p}: значения ступеней повторяются.`);
         if (v.length && Math.max(...v) <= 0) errors.push(`${p}: верхняя ступень должна быть больше 0.`);
+        if (v.some(x => x < 0)) errors.push(`${p}: ступени не могут быть отрицательными.`);
         if ((k.scale || []).some(s => !s.desc.trim())) warnings.push(`${p}: у ступени нет описания.`);
       }
       if (k.na_allowed && !k.na_condition.trim()) errors.push(`${p}: опишите условие N/A.`);
@@ -165,7 +178,7 @@ class CqaChecklistEditor extends HTMLElement {
     const legend = scored.map((k, i) => `<button class="${k.id === this.sel ? 'on' : ''}" data-act="select" data-id="${esc(k.id)}"><i style="background:${hues[i % hues.length]}"></i>
       <span class="nm">${esc(k.name || '(без названия)')}</span><span class="pc">${fmt(+k.weight || 0)} · ${sum > 0 ? Math.round((+k.weight || 0) / sum * 100) : 0}%</span></button>`).join('');
     const bar = `<svg class="donut" viewBox="0 0 42 42" role="img" aria-label="${T.sum}: ${fmt(sum)}"><circle r="15.915" cx="21" cy="21" stroke="#eceef0"></circle>${arcs}
-      <text x="21" y="21" font-size="7">${fmt(sum)}</text><text x="21" y="27" font-size="3.2" style="font-weight:400;fill:#5c5c5c">из 100</text></svg><div class="legend">${legend}</div>`;
+      <text x="21" y="21" font-size="${Math.min(7, 26 / Math.max(fmt(sum).length, 1))}">${fmt(sum)}</text><text x="21" y="27" font-size="3.2" style="font-weight:400;fill:#5c5c5c">из 100</text></svg><div class="legend">${legend}</div>`;
     const msg = this.msg ? `<li class="${this.msg.t}">${esc(this.msg.s)}</li>` : '';
     this.$('#problems').innerHTML = `
       <div class="share">${bar}</div>
@@ -193,13 +206,12 @@ class CqaChecklistEditor extends HTMLElement {
     const flag = k.type === 'flag', opt = (v, l, sel) => `<option value="${esc(v)}" ${sel ? 'selected' : ''}>${esc(l)}</option>`;
     let scale = '';
     if (k.type === 'scale') {
-      const max = Math.max(...k.scale.map(s => +s.value));
       scale = `<div class="steps"><h3>Шкала</h3>${k.scale.map((s, i) => `<div class="step">
         <input type="number" step="any" data-si="${i}" data-sf="value" value="${s.value}" aria-label="Баллы ступени ${i + 1}">
         <input data-si="${i}" data-sf="desc" value="${esc(s.desc)}" placeholder="Что соответствует этой ступени" aria-label="Описание ступени ${i + 1}">
         <button class="icon" data-act="delstep" data-i="${i}" aria-label="Удалить ступень">×</button></div>`).join('')}
         <button class="add" data-act="addstep">+ Ступень</button>
-        <p class="hint">Верхняя ступень (${fmt(max)}) даёт полный вес ${fmt(+k.weight || 0)}. Остальные пересчитываются пропорционально.</p></div>`;
+        <p class="hint" id="scalehint">${this.scaleHint(k)}</p></div>`;
     }
     f.innerHTML = `
       <div class="row"><label class="grow">Название<input data-f="name" value="${esc(k.name)}"></label>
@@ -215,6 +227,7 @@ class CqaChecklistEditor extends HTMLElement {
       <div class="actions"><button data-act="up">${T.up}</button><button data-act="down">${T.down}</button>
         <button class="del" data-act="del">${T.del}</button></div>`;
   }
+  scaleHint(k) { return `Верхняя ступень (${fmt(Math.max(...k.scale.map(s => +s.value)))}) даёт полный вес ${fmt(+k.weight || 0)}. Остальные пересчитываются пропорционально.`; }
   refresh(full = false) { this.paintMeta(); this.paintList(); if (full) this.paintForm(); }
 
   /* ---------- editing ---------- */
@@ -224,7 +237,7 @@ class CqaChecklistEditor extends HTMLElement {
     if (t.dataset.sf && k) {
       const s = k.scale[+t.dataset.si];
       s[t.dataset.sf] = t.dataset.sf === 'value' ? (t.value === '' ? 0 : Number(t.value)) : t.value;
-      this.paintMeta(); return;
+      this.paintMeta(); this.paintHint(k); return;
     }
     const f = t.dataset.f;
     if (!f || !k) return;
@@ -232,7 +245,9 @@ class CqaChecklistEditor extends HTMLElement {
     k[f] = v;
     if (f === 'type') this.applyType(k);
     this.refresh(['type', 'na_allowed'].includes(f));
+    this.paintHint(k);
   }
+  paintHint(k) { const h = this.$('#scalehint'); if (h && k.type === 'scale') h.textContent = this.scaleHint(k); }
   onChange(e) {
     const t = e.target;
     if (t.dataset.pick !== undefined) return this.switchTo(+t.value);

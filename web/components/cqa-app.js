@@ -112,7 +112,8 @@ class CqaApp extends HTMLElement {
     const id = arg ? +arg : null;
     if (p.firstChild && this.edId === id) return;
     this.edId = id;
-    p.innerHTML = `<cqa-checklist-editor api-base="${esc(this.apiBase)}"${id ? ` checklist-id="${id}"` : ''}></cqa-checklist-editor>`;
+    p.innerHTML = `<cqa-checklist-editor api-base="${esc(this.apiBase)}"${id ? ` checklist-id="${id}"` : ''}></cqa-checklist-editor>
+      <cqa-agent api-base="${esc(this.apiBase)}"></cqa-agent>`;
   }
 
   /* ---------- Диалоги ---------- */
