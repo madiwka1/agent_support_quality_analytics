@@ -15,7 +15,7 @@ const secs = t => {
   const d = Date.parse(t); return isNaN(d) ? NaN : d / 1000;
 };
 const short = (t, n = 90) => t.length > n ? t.slice(0, n) + '…' : t;
-const lblOf = (type, a, v) => a === 'na' ? 'N/A' : type === 'flag' ? (a === 'yes' ? 'Нарушение выявлено' : 'Не выявлено')
+const lblOf = (type, a, v) => a === 'na' ? 'N/A' : a === 'not_evaluated' ? 'Не оценён' : type === 'flag' ? (a === 'yes' ? 'Нарушение выявлено' : 'Не выявлено')
   : type === 'scale' ? `${fmt(v)} по шкале` : (a === 'yes' ? 'Да' : 'Нет');
 
 const CSS = `
@@ -114,12 +114,13 @@ class CqaResult extends HTMLElement {
   }
   badge(k) {
     const l = lblOf(k.type, k.answer, k.value);
-    if (k.answer === 'na') return ['na', l];
+    if (k.answer === 'na' || k.answer === 'not_evaluated') return ['na', l];
     if (k.type === 'flag') return [k.answer === 'yes' ? 'bad' : 'good', l];
     const r = k.effective_weight ? k.points / k.effective_weight : 0;
     return [r >= 0.999 ? 'good' : r <= 0 ? 'bad' : 'mid', l];
   }
   ptsLine(k) {
+    if (k.answer === 'not_evaluated') return 'Не оценён, в итог не входит.';
     if (k.answer === 'na') return `Исключён из расчёта, вес ${fmt(k.weight)} перераспределён между остальными.`;
     if (k.type === 'flag') return 'Баллов нет, отмечается отдельно.';
     const re = k.effective_weight !== k.weight ? `, после перераспределения ${fmt(k.effective_weight)}` : '';
@@ -136,7 +137,7 @@ class CqaResult extends HTMLElement {
       <span class="v">${fmt(s.points)} / ${fmt(s.max)}</span></div>`).join('');
     const crit = e.criteria.map(k => {
       const [cls, lbl] = this.badge(k), r = k.checked_range, ap = this.appOf(k.id);
-      const chips = k.evidence.map(x => `<button class="chip" data-from="${x.index}" data-to="${x.index}">№${x.index + 1} · ${esc(x.timestamp)} · ${esc(SPK[x.speaker] || x.speaker)}: ${esc(short(x.text))}</button>`).join('');
+      const chips = k.evidence.map(x => `<button class="chip" data-from="${x.index}" data-to="${x.index_to ?? x.index}">№${x.index + 1} · ${esc(x.timestamp)} · ${esc(SPK[x.speaker] || x.speaker)}: ${esc(short(x.text))}</button>`).join('');
       const rng = r && !k.evidence.length ? `<button class="chip rng" data-from="${r.from}" data-to="${r.to}">Проверенный участок: реплики ${r.from + 1}–${r.to + 1} (${esc(r.from_ts)} – ${esc(r.to_ts)})</button>` : '';
       let extra = '';
       if (k.changed) extra += `<div class="rev yes"><b>Оценка изменена после апелляции</b>Было: ${esc(lblOf(k.type, k.original.answer, k.original.value))}${k.original.points == null ? '' : ` (${fmt(k.original.points)} б.)`}, стало: ${esc(lbl)}. Решение проверяющего: ${esc(k.review?.reason || '')}</div>`;
@@ -156,10 +157,11 @@ class CqaResult extends HTMLElement {
       <div class="panel">
         <div class="head"><div class="total">${e.total == null ? 'не рассчитан' : fmt(e.total)}<small> / ${fmt(e.max_total)}</small></div>
           <span class="pill ${e.gross_violation ? 'bad' : 'ok'}">${e.gross_violation ? 'Грубое нарушение выявлено' : 'Грубых нарушений не выявлено'}</span>
+          ${e.incomplete ? '<span class="pill bad">Оценка неполная</span>' : ''}
           ${this.mode ? '' : '<button class="btn" data-act="appeal">Оспорить оценку</button>'}</div>
         ${e.changed ? `<div class="was">Итог пересчитан по результатам апелляции. Исходный итог: <b>${e.original_total == null ? '—' : fmt(e.original_total)}</b>.</div>` : ''}
         ${this.note ? `<div class="note ${this.note.t}">${esc(this.note.s)}${this.note.link ? ' <a href="#/appeals">Открыть апелляции</a>' : ''}</div>` : ''}
-        <div class="meta">Диалог ${esc(e.conversation_id)} · чек-лист «${esc(e.checklist_name)}», версия ${e.checklist_version} · модель ${esc(e.model || '')}</div>
+        <div class="meta">Диалог ${esc(e.conversation_id)} · чек-лист «${esc(e.checklist_name)}», версия ${e.checklist_version} · модель ${esc(e.model || '')}${e.prompt_tokens ? ` · промпт ${e.prompt_tokens} ток., сжатие ${e.compression_level}` : ''}</div>
         ${e.summary ? `<div class="sum"><b>Общий вывод</b>${esc(e.summary)}</div>` : ''}
         ${this.mode ? '<p class="meta">Отметьте критерии, с которыми вы не согласны, и опишите причину для каждого.</p>' : ''}
         <div class="secs">${secs_}</div>${crit}
