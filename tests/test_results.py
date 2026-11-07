@@ -118,3 +118,16 @@ def test_validator_prod_count_and_strict_json(doc):
     assert any("ровно 10" in e for e in check(doc, "prod"))
     assert "строгим JSON" in validate('{"a": NaN}', "dev", records=RECORDS)[0][0]
     assert "строгим JSON" in validate(b"\xff", "dev", records=RECORDS)[0][0]
+
+
+def test_refresh_after_evaluation(monkeypatch, tmp_path):
+    monkeypatch.setattr(ex, "ROOT", tmp_path)
+    monkeypatch.setattr(ex, "_saved_transcripts", lambda: {})
+    monkeypatch.setattr(ex, "latest_evaluations", lambda v: copy.deepcopy(EVALS))
+    monkeypatch.setattr(ex, "load_dataset", lambda d: {"records": RECORDS} if d == "dev" else (_ for _ in ()).throw(FileNotFoundError()))
+    assert ex.refresh_for("not-in-set") == []
+    [path] = ex.refresh_for("t-ok")
+    assert path == tmp_path / "results" / "dev" / "results.json"
+    doc = json.loads(path.read_text(encoding="utf-8"))
+    assert check(doc) == [] and [r["status"] for r in doc["results"]] == ["ok", "ok", "error"]
+    assert not list(path.parent.glob("*.tmp"))

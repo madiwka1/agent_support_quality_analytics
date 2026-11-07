@@ -10,12 +10,15 @@ import json
 import os
 import sqlite3
 import sys
+import tempfile
+import threading
 from pathlib import Path
 
 from app.checklist import DB_PATH
 from app.clean import clean_dialog
 from app.validate_results import CRITERIA, ROOT, SCHEMA, TEAM, final_score, load_dataset
 
+_LOCK = threading.Lock()  # batch evaluation runs 2 threads that may refresh the same file
 CLOUD_HOSTS = ("openai.com", "anthropic.com", "googleapis.com", "groq.com", "openrouter.ai", "together.xyz",
                "mistral.ai", "deepseek.com", "x.ai", "azure.com", "cohere.com", "fireworks.ai")
 
@@ -172,9 +175,28 @@ def _saved_transcripts() -> dict:
     return {cid: json.loads(js)["transcript"] for cid, js in rows}
 
 
+def refresh_for(conversation_id: str) -> list[Path]:
+    """Re-export every saved dataset (dev / prod) that contains this dialog; called after each evaluation."""
+    written = []
+    for dataset in ("dev", "prod"):
+        try:
+            records = load_dataset(dataset)["records"]
+        except FileNotFoundError:
+            continue
+        if any(r["conversation_id"] == conversation_id for r in records):
+            with _LOCK:
+                doc, _ = export(dataset, records=records)
+                write(doc, path := ROOT / "results" / dataset / "results.json")
+            written.append(path)
+    return written
+
+
 def write(doc: dict, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(doc, ensure_ascii=False, indent=2, allow_nan=False) + "\n", encoding="utf-8")
+    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")  # write then rename: readers never see half a file
+    with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
+        f.write(json.dumps(doc, ensure_ascii=False, indent=2, allow_nan=False) + "\n")
+    os.replace(tmp, path)
 
 
 def main(argv=None) -> int:

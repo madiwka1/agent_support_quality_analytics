@@ -408,6 +408,12 @@ def evaluate(req: EvaluateRequest):
         con.execute("INSERT INTO evaluations VALUES(?, ?, ?, ?, ?, ?)",
                     (result["id"], result["conversation_id"], cfg["id"], cfg["version"], result["created_at"],
                      json.dumps(result, ensure_ascii=False)))
+    try:  # keep results/<dataset>/results.json current; a failed refresh must not fail the evaluation
+        from app.export_results import refresh_for
+        for path in refresh_for(req.conversation_id):
+            log.info("results refreshed: %s", path)
+    except Exception as e:
+        log.warning("results.json not refreshed: %s", e)
     return result
 
 
