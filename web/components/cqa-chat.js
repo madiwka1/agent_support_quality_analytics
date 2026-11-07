@@ -14,21 +14,41 @@ const secs = t => {
 const mmss = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
 const CSS = `
-:host{display:block;font:15px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#191919}
+:host{display:block;font:15px/1.5 "Inter","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#13231a}
 *{box-sizing:border-box}
 audio{width:100%;margin:0 0 10px}
 .aerr{color:#d32f2f;font-size:13px;margin:-4px 0 10px}
-.chat{display:flex;flex-direction:column;gap:8px;padding:14px;background:#eceef0;border:1px solid #d0d5db;border-radius:12px;box-shadow:inset 0 1px 3px #0000000d;max-height:var(--chat-h,70vh);overflow:auto}
-.msg{max-width:82%;padding:8px 12px 9px;border-radius:14px;background:#fff;border:1px solid #e1e4e8;white-space:pre-wrap;word-break:break-word;align-self:flex-start}
+.chat{display:flex;flex-direction:column;gap:8px;padding:14px;background:#eef3f0;border:1px solid #dbe5df;border-radius:20px;box-shadow:inset 0 1px 3px #0000000d;max-height:var(--chat-h,70vh);overflow:auto}
+.msg{max-width:82%;padding:9px 14px 10px;border-radius:18px;box-shadow:0 1px 2px #0b2a1c0f;background:#fff;border:1px solid #e3e9e5;white-space:pre-wrap;word-break:break-word;align-self:flex-start}
 .msg.client{border-bottom-left-radius:4px}
 .msg.bot{border-bottom-left-radius:4px;background:#f1f2f4;color:#5c5c5c}
-.msg.operator{align-self:flex-end;border-bottom-right-radius:4px;background:#e8f5e9;border-color:#bfe3c4}
+.msg.operator{align-self:flex-end;border-bottom-right-radius:4px;background:#e7f6ec;border-color:#bfe3c4}
 .msg.system{align-self:center;max-width:90%;padding:3px 12px;border-radius:999px;background:transparent;border-color:transparent;color:#5c5c5c;font-size:13px;text-align:center}
-.who{display:flex;gap:8px;align-items:baseline;font-size:12px;color:#5c5c5c;margin-bottom:2px}.who b{color:#191919}
-.msg.operator .who b{color:#2a8640}
-.has-audio .msg{cursor:pointer}.has-audio .msg:hover{border-color:#2a8640}
-.msg.now{box-shadow:0 0 0 2px #4fb84e}
+.who{display:flex;gap:8px;align-items:baseline;font-size:12px;color:#5c5c5c;margin-bottom:2px}.who b{color:#13231a}
+.msg.operator .who b{color:#178a3f}
+.has-audio .msg{cursor:pointer}.has-audio .msg:hover{border-color:#178a3f}
+.msg.now{box-shadow:0 0 0 2px #43b75c}
 .msg.hl{background:#fff3c4;border-color:#e0b400;box-shadow:0 0 0 2px #e0b400}
+/* ---- theme layer ---- */
+:host{--line:#e3e9e5;--accg:linear-gradient(135deg,#178a3f,#43b75c);color:#13231a}
+h1,h2,h3{letter-spacing:-.01em;color:#0b2a1c}
+button,.btn,a.btn{border-radius:999px;font-weight:600;padding:8px 18px;background:#fff;transition:transform .12s,box-shadow .2s,border-color .2s,background-color .2s}
+button:hover:not(:disabled),.btn:hover,a.btn:hover{border-color:#178a3f;box-shadow:0 4px 12px #178a3f26}
+button.pri,.btn.pri,a.btn.pri{background:var(--accg);border-color:transparent;color:#fff;box-shadow:0 6px 16px #178a3f40}
+button.pri:hover:not(:disabled),.btn.pri:hover{transform:translateY(-1px);box-shadow:0 8px 20px #178a3f55;border-color:transparent}
+input,select,textarea{border-radius:12px;padding:9px 12px;transition:border-color .2s,box-shadow .2s}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none;border-color:#178a3f;box-shadow:0 0 0 3px #178a3f26}
+.panel,section,aside,.it,.act,.share{border-radius:20px}
+.it,.act{box-shadow:0 2px 4px #0b2a1c0a,0 12px 32px #0b2a1c0f;border-color:#e3e9e5}
+thead th{background:#eef8f1;color:#178a3f}
+.item,.legend button,button.chip,.icon,.add{border-radius:12px;font-weight:500}
+.item .w,.legend .pc{font-weight:600}
+.pill,.badge{border-radius:999px;font-weight:600}
+.drop{border-radius:20px;border:2px dashed #9fd3ae;background:linear-gradient(180deg,#f7fcf8,#eef8f1)}
+.pv,.frag{border-radius:14px}
+.note,.err,.sum,.why,.rev,.blk,.problems li{border-radius:0 12px 12px 0}
+.bar{height:12px}
+
 `;
 
 class CqaChat extends HTMLElement {

@@ -21,38 +21,38 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const fmt = n => String(Math.round(n * 100) / 100);
 
 const CSS = `
-:host{display:block;font:15px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#191919;
-  --line:#e1e4e8;--mut:#5c5c5c;--acc:#2a8640;--accbg:#e8f5e9;--err:#d32f2f;--warn:#b26a00;--bg:#fff}
+:host{display:block;font:15px/1.55 "Inter","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#13231a;
+  --line:#e3e9e5;--mut:#5c5c5c;--acc:#178a3f;--accbg:#e7f6ec;--err:#d32f2f;--warn:#b26a00;--bg:#fff}
 *{box-sizing:border-box}
 .wrap{max-width:1180px;margin:0 auto;padding:20px 16px 40px}
 header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
 h2{margin:0 0 6px;font-size:26px;font-weight:700}
 input,select,textarea,button{font:inherit;color:inherit}
-input,select,textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:4px;background:#fff}
+input,select,textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:10px;background:#fff}
 textarea{resize:vertical}
 input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
 input:disabled,select:disabled{background:#f1f2f4;color:var(--mut)}
 .cl-name{font-size:15px;min-width:320px}
 .h-right{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .ver{font-weight:600}.state{color:var(--mut)}.state.d{color:var(--warn)}
-button{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:4px;padding:7px 12px}
+button{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 12px}
 button:hover:not(:disabled){border-color:var(--acc)}
 button:disabled{opacity:.45;cursor:default}
 button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600;border-radius:8px}
 .share{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:6px 0 10px;box-shadow:0 1px 3px #0000000d}
 .donut{width:150px;height:150px;flex:none}.donut circle{fill:none;stroke-width:5;transition:stroke-width .15s}.donut circle.on{stroke-width:7.5}
-.donut text{font-weight:700;fill:#191919;text-anchor:middle}
+.donut text{font-weight:700;fill:#13231a;text-anchor:middle}
 .legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 18px;flex:1;min-width:260px}
 .legend button{display:flex;gap:8px;align-items:center;text-align:left;border-color:transparent;padding:4px 8px}
 .legend button.on{background:var(--accbg);border-color:var(--acc)}
 .legend i{width:12px;height:12px;border-radius:3px;flex:none}.legend .nm{flex:1}.legend .pc{color:var(--mut);font-variant-numeric:tabular-nums}
-.sumline{color:var(--mut);margin-bottom:8px}.sumline b{color:#191919}.sumline b.bad{color:var(--warn)}
+.sumline{color:var(--mut);margin-bottom:8px}.sumline b{color:#13231a}.sumline b.bad{color:var(--warn)}
 .problems{margin:0 0 12px;padding:0;list-style:none}
 .problems li{padding:6px 10px;border-left:3px solid;margin-bottom:4px;background:#faf8f3}
 .problems .e{border-color:var(--err);color:var(--err)}.problems .w{border-color:var(--warn);color:var(--warn)}.problems .o{border-color:var(--acc);color:var(--acc)}
 .body{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
 @media(max-width:820px){.body{grid-template-columns:1fr}}
-aside{border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 3px #0000000f,0 4px 14px #00000008;background:var(--bg);padding:6px 10px 10px}
+aside{border:1px solid var(--line);border-radius:20px;box-shadow:0 2px 4px #0b2a1c0a,0 12px 32px #0b2a1c0f;background:var(--bg);padding:6px 10px 10px}
 .sec{padding:8px 0;border-bottom:1px solid var(--line)}
 .sec-h{display:flex;gap:6px;align-items:center;margin-bottom:4px}
 .sec-name{border-color:transparent;font-weight:600;padding:4px 6px}.sec-name:hover{border-color:var(--line)}
@@ -63,11 +63,11 @@ aside{border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 3px #0000
 .item .nm{flex:1}.item .w{min-width:28px;text-align:right;font-weight:600}
 .tag{font-size:12px;color:var(--mut);border:1px solid var(--line);border-radius:10px;padding:0 7px}
 .add{border:none;color:var(--acc);padding:6px 8px;background:none}
-section{border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 3px #0000000f,0 4px 14px #00000008;background:var(--bg);padding:16px}
+section{border:1px solid var(--line);border-radius:20px;box-shadow:0 2px 4px #0b2a1c0a,0 12px 32px #0b2a1c0f;background:var(--bg);padding:16px}
 label{display:block;margin-bottom:12px;color:var(--mut)}
-label>input,label>select,label>textarea{margin-top:3px;color:#191919}
+label>input,label>select,label>textarea{margin-top:3px;color:#13231a}
 .row{display:flex;gap:12px;flex-wrap:wrap}.row>label{flex:0 1 160px}.row>label.grow{flex:1 1 260px}
-label.chk{display:flex;gap:8px;align-items:center;flex:0 0 auto;margin-top:22px;color:#191919}
+label.chk{display:flex;gap:8px;align-items:center;flex:0 0 auto;margin-top:22px;color:#13231a}
 label.chk input{width:auto;margin:0}
 .steps h3{margin:4px 0 6px;font-size:14px}
 .step{display:grid;grid-template-columns:80px 1fr 34px;gap:8px;margin-bottom:6px}
@@ -76,6 +76,26 @@ label.chk input{width:auto;margin:0}
 .actions .del{margin-left:auto;color:var(--err)}
 .lists{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
 .lists select{width:auto;min-width:260px;font-weight:600}
+/* ---- theme layer ---- */
+:host{--line:#e3e9e5;--accg:linear-gradient(135deg,#178a3f,#43b75c);color:#13231a}
+h1,h2,h3{letter-spacing:-.01em;color:#0b2a1c}
+button,.btn,a.btn{border-radius:999px;font-weight:600;padding:8px 18px;background:#fff;transition:transform .12s,box-shadow .2s,border-color .2s,background-color .2s}
+button:hover:not(:disabled),.btn:hover,a.btn:hover{border-color:#178a3f;box-shadow:0 4px 12px #178a3f26}
+button.pri,.btn.pri,a.btn.pri{background:var(--accg);border-color:transparent;color:#fff;box-shadow:0 6px 16px #178a3f40}
+button.pri:hover:not(:disabled),.btn.pri:hover{transform:translateY(-1px);box-shadow:0 8px 20px #178a3f55;border-color:transparent}
+input,select,textarea{border-radius:12px;padding:9px 12px;transition:border-color .2s,box-shadow .2s}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none;border-color:#178a3f;box-shadow:0 0 0 3px #178a3f26}
+.panel,section,aside,.it,.act,.share{border-radius:20px}
+.it,.act{box-shadow:0 2px 4px #0b2a1c0a,0 12px 32px #0b2a1c0f;border-color:#e3e9e5}
+thead th{background:#eef8f1;color:#178a3f}
+.item,.legend button,button.chip,.icon,.add{border-radius:12px;font-weight:500}
+.item .w,.legend .pc{font-weight:600}
+.pill,.badge{border-radius:999px;font-weight:600}
+.drop{border-radius:20px;border:2px dashed #9fd3ae;background:linear-gradient(180deg,#f7fcf8,#eef8f1)}
+.pv,.frag{border-radius:14px}
+.note,.err,.sum,.why,.rev,.blk,.problems li{border-radius:0 12px 12px 0}
+.bar{height:12px}
+
 `;
 
 class CqaChecklistEditor extends HTMLElement {
@@ -168,7 +188,7 @@ class CqaChecklistEditor extends HTMLElement {
       <button data-act="revert" ${dirty ? '' : 'disabled'}>${T.revert}</button>
       <button class="pri" data-act="save" ${dirty && !errors.length && !this.busy ? '' : 'disabled'}>${T.save}</button>`;
     const scored = c.criteria.filter(k => k.type !== 'flag');
-    const hues = ['#2a8640', '#4fb84e', '#0f5c2e', '#8ccf7e', '#1f6f8b', '#c99a2e', '#5c5c5c', '#3e9e9e'];
+    const hues = ['#178a3f', '#43b75c', '#0f5c2e', '#8ccf7e', '#1f6f8b', '#c99a2e', '#5c5c5c', '#3e9e9e'];
     const sum = this.weightSum();
     let off = 0;
     const arcs = scored.map((k, i) => {

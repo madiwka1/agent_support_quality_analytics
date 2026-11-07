@@ -12,38 +12,58 @@ const EXAMPLES = [
 ];
 
 const CSS = `
-:host{font:15px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#191919}
+:host{font:15px/1.5 "Inter","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#13231a}
 *{box-sizing:border-box}
 .fab{position:fixed;right:24px;bottom:24px;z-index:50;display:flex;align-items:center;gap:10px;padding:5px 18px 5px 5px;border:0;border-radius:999px;cursor:pointer;
-  background:linear-gradient(135deg,#2a8640,#4fb84e);color:#fff;font:700 15px/1 inherit;box-shadow:0 6px 18px #2a864066;transition:transform .15s}
+  background:linear-gradient(135deg,#0f6f31,#43b75c);color:#fff;font:700 15px/1 inherit;box-shadow:0 6px 18px #178a3f66;transition:transform .15s}
 .fab{transition:transform .15s,background-color .35s,box-shadow .35s,padding .35s,gap .35s}
 .lbl{display:inline-block;overflow:hidden;white-space:nowrap;max-width:140px;transition:max-width .35s,opacity .25s}
 .fab.mini{padding:0;gap:0;background:transparent;box-shadow:none}.fab.mini .lbl{max-width:0;opacity:0}
 .fab.mini .ava{background:transparent}.fab.mini .ava img{width:58px;height:58px;filter:drop-shadow(0 4px 8px #00000055)}
 .ava img{transition:width .35s,height .35s}
-.fab:hover{transform:translateY(-2px)}.fab:focus-visible{outline:3px solid #191919;outline-offset:3px}
+.fab:hover{transform:translateY(-2px)}.fab:focus-visible{outline:3px solid #13231a;outline-offset:3px}
 .ava{position:relative;width:50px;height:50px;border-radius:50%;background:#fff;display:grid;place-items:center;flex:none}
 .ava img{width:44px;height:44px;object-fit:contain}
 .fab.busy .ava::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:3px solid #fff;border-top-color:transparent;animation:spin 1s linear infinite}
-.hd .ava{width:30px;height:30px;background:#e8f5e9}.hd .ava img{width:26px;height:26px}.hd span{display:flex;align-items:center;gap:8px}
+.hd .ava{width:30px;height:30px;background:#e7f6ec}.hd .ava img{width:26px;height:26px}.hd span{display:flex;align-items:center;gap:8px}
 @keyframes spin{to{transform:rotate(360deg)}}
 .panel{position:fixed;right:24px;bottom:90px;z-index:50;width:min(400px,calc(100vw - 32px));max-height:calc(100vh - 120px);overflow:auto;
-  background:#fff;border:1px solid #e1e4e8;border-radius:14px;box-shadow:0 12px 40px #0000002e;padding:16px}
+  background:#fff;border:1px solid #e3e9e5;border-radius:22px;box-shadow:0 20px 60px #0b2a1c40;padding:16px}
 .panel[hidden]{display:none}
 .hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}.hd b{font-size:16px}
 .x{border:0;background:none;font-size:22px;line-height:1;cursor:pointer;color:#5c5c5c}
 .sub{color:#5c5c5c;font-size:13px;margin:0 0 10px}
 .ex{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
-.ex button{text-align:left;font:inherit;font-size:13px;border:1px solid #e1e4e8;background:#f8f9fa;border-radius:8px;padding:6px 9px;cursor:pointer}
-.ex button:hover{border-color:#2a8640;background:#e8f5e9}
-textarea{width:100%;min-height:92px;resize:vertical;font:inherit;padding:9px 10px;border:1px solid #e1e4e8;border-radius:8px}
-textarea:focus-visible{outline:2px solid #2a8640;outline-offset:1px}
+.ex button{text-align:left;font:inherit;font-size:13px;border:1px solid #e3e9e5;background:#f6f9f7;border-radius:8px;padding:6px 9px;cursor:pointer}
+.ex button:hover{border-color:#178a3f;background:#e7f6ec}
+textarea{width:100%;min-height:92px;resize:vertical;font:inherit;padding:9px 10px;border:1px solid #e3e9e5;border-radius:8px}
+textarea:focus-visible{outline:2px solid #178a3f;outline-offset:1px}
 .row{display:flex;gap:10px;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap}
 label{display:flex;gap:6px;align-items:center;font-size:13px;color:#5c5c5c;cursor:pointer}
-.go{font:inherit;font-weight:600;border:0;border-radius:8px;padding:8px 16px;background:#2a8640;color:#fff;cursor:pointer}
-.go:disabled{opacity:.5;cursor:default}.stop{font:inherit;border:1px solid #e1e4e8;background:#fff;border-radius:8px;padding:7px 12px;cursor:pointer}
+.go{font:inherit;font-weight:600;border:0;border-radius:8px;padding:8px 16px;background:#178a3f;color:#fff;cursor:pointer}
+.go:disabled{opacity:.5;cursor:default}.stop{font:inherit;border:1px solid #e3e9e5;background:#fff;border-radius:8px;padding:7px 12px;cursor:pointer}
 .st{margin-top:12px;padding:9px 11px;border-radius:8px;font-size:14px}
-.st.wait{background:#f1f2f4;color:#5c5c5c}.st.ok{background:#e8f5e9;border-left:3px solid #2a8640}.st.e{background:#fdecec;color:#d32f2f;border-left:3px solid #d32f2f}
+.st.wait{background:#f1f2f4;color:#5c5c5c}.st.ok{background:#e7f6ec;border-left:3px solid #178a3f}.st.e{background:#fdecec;color:#d32f2f;border-left:3px solid #d32f2f}
+/* ---- theme layer ---- */
+:host{--line:#e3e9e5;--accg:linear-gradient(135deg,#178a3f,#43b75c);color:#13231a}
+h1,h2,h3{letter-spacing:-.01em;color:#0b2a1c}
+button,.btn,a.btn{border-radius:999px;font-weight:600;padding:8px 18px;background:#fff;transition:transform .12s,box-shadow .2s,border-color .2s,background-color .2s}
+button:hover:not(:disabled),.btn:hover,a.btn:hover{border-color:#178a3f;box-shadow:0 4px 12px #178a3f26}
+button.pri,.btn.pri,a.btn.pri{background:var(--accg);border-color:transparent;color:#fff;box-shadow:0 6px 16px #178a3f40}
+button.pri:hover:not(:disabled),.btn.pri:hover{transform:translateY(-1px);box-shadow:0 8px 20px #178a3f55;border-color:transparent}
+input,select,textarea{border-radius:12px;padding:9px 12px;transition:border-color .2s,box-shadow .2s}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none;border-color:#178a3f;box-shadow:0 0 0 3px #178a3f26}
+.panel,section,aside,.it,.act,.share{border-radius:20px}
+.it,.act{box-shadow:0 2px 4px #0b2a1c0a,0 12px 32px #0b2a1c0f;border-color:#e3e9e5}
+thead th{background:#eef8f1;color:#178a3f}
+.item,.legend button,button.chip,.icon,.add{border-radius:12px;font-weight:500}
+.item .w,.legend .pc{font-weight:600}
+.pill,.badge{border-radius:999px;font-weight:600}
+.drop{border-radius:20px;border:2px dashed #9fd3ae;background:linear-gradient(180deg,#f7fcf8,#eef8f1)}
+.pv,.frag{border-radius:14px}
+.note,.err,.sum,.why,.rev,.blk,.problems li{border-radius:0 12px 12px 0}
+.bar{height:12px}
+
 `;
 
 class CqaAgent extends HTMLElement {

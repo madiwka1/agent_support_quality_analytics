@@ -21,28 +21,28 @@ const lblOf = (type, a, v) => a === 'na' ? 'N/A' : a === 'not_evaluated' ? 'Не
   : type === 'scale' ? `${fmt(v)} по шкале` : (a === 'yes' ? 'Да' : 'Нет');
 
 const CSS = `
-:host{display:block;font:15px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#191919;--line:#e1e4e8;--mut:#5c5c5c;--acc:#2a8640;--accbg:#e8f5e9;--err:#d32f2f;--warn:#b26a00}
+:host{display:block;font:15px/1.55 "Inter","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#13231a;--line:#e3e9e5;--mut:#5c5c5c;--acc:#178a3f;--accbg:#e7f6ec;--err:#d32f2f;--warn:#b26a00}
 *{box-sizing:border-box}
 .wrap{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;align-items:start;margin-top:20px}
 @media(max-width:900px){.wrap{grid-template-columns:1fr}}
-.panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 3px #0000000f,0 4px 14px #00000008;padding:18px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:20px;box-shadow:0 2px 4px #0b2a1c0a,0 12px 32px #0b2a1c0f;padding:18px}
 h2{margin:0 0 10px;font-size:16px;font-weight:600}
-button,.btn{font:inherit;color:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:4px;padding:7px 12px}
+button,.btn{font:inherit;color:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:10px;padding:7px 12px}
 button:hover:not(:disabled){border-color:var(--acc)}
 button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
 .head{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;margin-bottom:12px}.head .btn{margin-left:auto}
 .total{display:flex;align-items:center;gap:14px}.gauge{width:92px;height:92px}.gauge circle{fill:none;stroke-width:4.5}
-.gauge text{font-weight:800;fill:#191919;text-anchor:middle}.total small{font-size:14px;color:var(--mut)}
+.gauge text{font-weight:800;fill:#13231a;text-anchor:middle}.total small{font-size:14px;color:var(--mut)}
 .pill{padding:3px 10px;border-radius:12px;font-size:13px;border:1px solid}
 .pill.ok{color:var(--acc);border-color:var(--acc);background:var(--accbg)}.pill.bad{color:var(--err);border-color:var(--err);background:#fdecec}
 .meta{color:var(--mut);font-size:13px}
-.sum,.why{background:#f0f8f0;border-left:3px solid var(--acc);padding:8px 12px;margin:10px 0}
+.sum,.why{background:#eef8f1;border-left:3px solid var(--acc);padding:8px 12px;margin:10px 0}
 .sum b,.why b,.rev b{display:block;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
-.why{background:#f8f9fa;border-color:var(--line);margin:8px 0}
+.why{background:#f6f9f7;border-color:var(--line);margin:8px 0}
 .was{margin:6px 0;color:var(--mut)}
 .note{padding:8px 12px;margin:10px 0;border-left:3px solid var(--acc);background:var(--accbg)}.note.e{border-color:var(--err);background:#fdecec}
 .secs{margin:8px 0 16px}.sec{display:grid;grid-template-columns:minmax(120px,1fr) 2fr 90px;gap:10px;align-items:center;padding:3px 0}
-.bar{height:10px;background:#eceef0;border-radius:999px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#2a8640,#4fb84e);border-radius:999px}
+.bar{height:10px;background:#eceef0;border-radius:999px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#178a3f,#43b75c);border-radius:999px}
 .sec .v{text-align:right;font-variant-numeric:tabular-nums}
 .cr{border-top:1px solid var(--line);padding:14px 0}.cr h3{font-size:16px}
 .top{display:flex;gap:10px;align-items:baseline;justify-content:space-between}.top h3{margin:0;font-size:15px}
@@ -54,14 +54,34 @@ button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:
 .rev{padding:8px 12px;margin:8px 0;border-left:3px solid}
 .rev.yes{border-color:var(--acc);background:var(--accbg)}.rev.no{border-color:var(--err);background:#fdecec}.rev.wait{border-color:var(--warn);background:#fff4e0}
 .pick{display:flex;gap:8px;align-items:center;margin-top:8px;font-weight:600;color:var(--acc);cursor:pointer}
-.abox textarea{width:100%;margin-top:6px;padding:8px 9px;border:1px solid var(--line);border-radius:4px;font:inherit;resize:vertical}
+.abox textarea{width:100%;margin-top:6px;padding:8px 9px;border:1px solid var(--line);border-radius:10px;font:inherit;resize:vertical}
 .abar{position:sticky;bottom:0;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;background:#fff;border-top:1px solid var(--line);padding:12px 0 0;margin-top:8px}
 .aerr{color:var(--err);flex:1}
 .chips{display:flex;flex-direction:column;gap:4px;margin-top:6px}
-button.chip{text-align:left;background:#f8f9fa;padding:5px 8px}
+button.chip{text-align:left;background:#f6f9f7;padding:5px 8px}
 button.chip:hover{background:var(--accbg)}button.chip.rng{color:var(--mut);background:#fff}
 .tr{position:sticky;top:12px}.tr cqa-chat{--chat-h:72vh}
 .err{color:var(--err);padding:8px 10px;border-left:3px solid var(--err);background:#fdecec}
+/* ---- theme layer ---- */
+:host{--line:#e3e9e5;--accg:linear-gradient(135deg,#178a3f,#43b75c);color:#13231a}
+h1,h2,h3{letter-spacing:-.01em;color:#0b2a1c}
+button,.btn,a.btn{border-radius:999px;font-weight:600;padding:8px 18px;background:#fff;transition:transform .12s,box-shadow .2s,border-color .2s,background-color .2s}
+button:hover:not(:disabled),.btn:hover,a.btn:hover{border-color:#178a3f;box-shadow:0 4px 12px #178a3f26}
+button.pri,.btn.pri,a.btn.pri{background:var(--accg);border-color:transparent;color:#fff;box-shadow:0 6px 16px #178a3f40}
+button.pri:hover:not(:disabled),.btn.pri:hover{transform:translateY(-1px);box-shadow:0 8px 20px #178a3f55;border-color:transparent}
+input,select,textarea{border-radius:12px;padding:9px 12px;transition:border-color .2s,box-shadow .2s}
+input:focus-visible,select:focus-visible,textarea:focus-visible{outline:none;border-color:#178a3f;box-shadow:0 0 0 3px #178a3f26}
+.panel,section,aside,.it,.act,.share{border-radius:20px}
+.it,.act{box-shadow:0 2px 4px #0b2a1c0a,0 12px 32px #0b2a1c0f;border-color:#e3e9e5}
+thead th{background:#eef8f1;color:#178a3f}
+.item,.legend button,button.chip,.icon,.add{border-radius:12px;font-weight:500}
+.item .w,.legend .pc{font-weight:600}
+.pill,.badge{border-radius:999px;font-weight:600}
+.drop{border-radius:20px;border:2px dashed #9fd3ae;background:linear-gradient(180deg,#f7fcf8,#eef8f1)}
+.pv,.frag{border-radius:14px}
+.note,.err,.sum,.why,.rev,.blk,.problems li{border-radius:0 12px 12px 0}
+.bar{height:12px}
+
 `;
 
 class CqaResult extends HTMLElement {
@@ -119,7 +139,7 @@ class CqaResult extends HTMLElement {
   }
   gauge(e) {
     const pc = e.total == null ? 0 : Math.max(0, Math.min(100, e.total / e.max_total * 100));
-    const col = pc >= 85 ? '#2a8640' : pc >= 60 ? '#b26a00' : '#d32f2f';
+    const col = pc >= 85 ? '#178a3f' : pc >= 60 ? '#b26a00' : '#d32f2f';
     return `<svg class="gauge" viewBox="0 0 42 42" role="img" aria-label="Итог ${e.total == null ? 'не рассчитан' : fmt(e.total)}">
       <circle r="15.915" cx="21" cy="21" stroke="#eceef0"></circle>
       <circle r="15.915" cx="21" cy="21" stroke="${col}" stroke-linecap="round" stroke-dasharray="${pc} ${100 - pc}" stroke-dashoffset="25"></circle>

@@ -51,10 +51,10 @@ class CqaChecklistPicker extends HTMLElement {
   }
   paint() {
     this.root.innerHTML = `<style>
-      :host{display:block;font:15px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#191919}
+      :host{display:block;font:15px/1.5 "Inter","Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#13231a}
       .r{display:flex;flex-wrap:wrap;gap:12px}label{display:block;color:#5c5c5c}
-      select{display:block;margin-top:3px;min-width:240px;padding:7px 9px;border:1px solid #e1e4e8;border-radius:4px;background:#fff;color:#191919;font:inherit}
-      select:focus-visible{outline:2px solid #2a8640;outline-offset:1px}</style>
+      select{display:block;margin-top:3px;min-width:240px;padding:7px 9px;border:1px solid #e3e9e5;border-radius:12px;padding:9px 12px;background:#fff;color:#13231a;font:inherit}
+      select:focus-visible{outline:2px solid #178a3f;outline-offset:1px}</style>
       <div class="r">
         <label>Чек-лист для оценки<select data-k="cl">${this.lists.map(l => `<option value="${l.id}" ${l.id === this.cid ? 'selected' : ''}>${esc(l.name)}</option>`).join('')}</select></label>
         <label>Версия<select data-k="ver"><option value="" ${this.pin ? '' : 'selected'}>Последняя (v${this.versions[0]?.version ?? '?'})</option>
