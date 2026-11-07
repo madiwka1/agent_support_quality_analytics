@@ -6,6 +6,7 @@ from fastapi.staticfiles import StaticFiles
 
 from app.checklist import router as checklist_router, seed_if_empty
 from app.conversations import router as conversations_router
+from app.evaluate import router as evaluate_router
 
 
 @asynccontextmanager
@@ -17,5 +18,6 @@ async def lifespan(_):
 app = FastAPI(title="CQA", lifespan=lifespan)
 app.include_router(checklist_router)
 app.include_router(conversations_router)
+app.include_router(evaluate_router)
 # Mounted last so /api/* routes win.
 app.mount("/", StaticFiles(directory=Path(__file__).parent.parent / "web", html=True), name="web")

@@ -1,10 +1,11 @@
 /* <cqa-home api-base="">
  * Operator homepage: choose a checklist version, load a transcript, start evaluation.
- * Uses <cqa-checklist-picker> (load its script first).
+ * Uses <cqa-checklist-picker> (load its script first) and <cqa-result> (load cqa-result.js).
  * Accepted transcript input:
  *   - JSON: one record, an array of records, the full organizers' API response, or a bare transcript array
  *   - Text: lines like "[00:02] operator: Здравствуйте!" (timestamp optional; client/operator/bot/system)
- * Event "cqa-evaluate-requested": detail = {conversation_id, checklist_id, version}
+ * Events: "cqa-evaluate-requested": detail = {conversation_id, checklist_id, version}
+ *         "cqa-evaluated": detail = evaluation result
  */
 (() => {
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
@@ -128,7 +129,8 @@ class CqaHome extends HTMLElement {
             <button data-act="parse">Прочитать текст</button></details>
           <div id="tr"></div></div>
       </div>
-      <div class="act" id="act"></div></div>`;
+      <div class="act" id="act"></div>
+      <div id="res"></div></div>`;
     this.paintCl(); this.paintTr(); this.paintAct();
   }
 
@@ -155,7 +157,7 @@ class CqaHome extends HTMLElement {
   /* ---------- transcript ---------- */
   async readFile(f) { this.ingest(await f.text(), f.name); }
   ingest(text, name) {
-    this.msg = null; this.idx = 0; this.file = name;
+    this.msg = null; this.idx = 0; this.file = name; this.$('#res').innerHTML = '';
     try {
       const t = text.trim();
       if (!t) throw new Error('Файл пустой.');
@@ -188,31 +190,42 @@ class CqaHome extends HTMLElement {
     const dl = r ? `<b>${esc(r.conversation_id || 'новый диалог')}</b> (${r.language}, ${r.transcript.length} реплик)` : 'не загружен';
     this.$('#act').innerHTML = `<div class="sum">Чек-лист: ${cl}. Диалог: ${dl}.
       ${this.msg ? `<br><span class="${this.msg.t === 'e' ? 'bad' : 'ok'}">${esc(this.msg.s)}</span>` : ''}</div>
-      <button class="pri" data-act="run" ${ok ? '' : 'disabled'}>${this.busy ? 'Сохраняю…' : 'Запустить оценку'}</button>`;
+      <button class="pri" data-act="run" ${ok ? '' : 'disabled'}>${this.busy ? 'Оцениваю…' : 'Запустить оценку'}</button>`;
   }
 
   onChange(e) {
     const t = e.target;
     if (t.type === 'file' && t.files[0]) this.readFile(t.files[0]);
-    else if (t.dataset.k === 'rec') { this.idx = +t.value; this.msg = null; this.paintTr(); this.paintAct(); }
+    else if (t.dataset.k === 'rec') { this.idx = +t.value; this.msg = null; this.$('#res').innerHTML = ''; this.paintTr(); this.paintAct(); }
   }
   onClick(e) {
     const a = e.target.closest('[data-act]')?.dataset.act;
     if (a === 'parse') this.ingest(this.$('#paste').value, 'вставленный текст');
-    else if (a === 'clear') { this.recs = []; this.err = null; this.msg = null; this.$('input[type=file]').value = ''; this.$('#paste').value = ''; this.paintTr(); this.paintAct(); }
+    else if (a === 'clear') { this.recs = []; this.err = null; this.msg = null; this.$('input[type=file]').value = ''; this.$('#paste').value = ''; this.$('#res').innerHTML = ''; this.paintTr(); this.paintAct(); }
     else if (a === 'run') this.run();
   }
+
+  /* ---------- save conversation, then evaluate ---------- */
+  async post(path, body) {
+    const res = await fetch(this.apiBase + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const d = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(Array.isArray(d.detail) ? d.detail.map(x => x.msg).join('; ') : d.detail || 'HTTP ' + res.status);
+    return d;
+  }
   async run() {
-    const r = this.rec(); this.busy = true; this.msg = null; this.paintAct();
+    const r = this.rec(); this.busy = true; this.msg = null; this.$('#res').innerHTML = ''; this.paintAct();
     try {
-      const res = await fetch(this.apiBase + '/api/conversations', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(r) });
-      const d = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(Array.isArray(d.detail) ? d.detail.map(x => x.msg).join('; ') : d.detail || 'HTTP ' + res.status);
+      const d = await this.post('/api/conversations', r);
       r.conversation_id = d.conversation_id;
-      this.msg = { t: 'o', s: `Диалог ${d.conversation_id} сохранён. Движок оценки подключается следующим шагом.` };
-      this.dispatchEvent(new CustomEvent('cqa-evaluate-requested', { bubbles: true, composed: true,
-        detail: { conversation_id: d.conversation_id, checklist_id: this.sel.checklist_id, version: this.sel.version } }));
-    } catch (e) { this.msg = { t: 'e', s: 'Не удалось сохранить: ' + e.message }; }
+      const detail = { conversation_id: d.conversation_id, checklist_id: this.sel.checklist_id, version: this.sel.version };
+      this.dispatchEvent(new CustomEvent('cqa-evaluate-requested', { bubbles: true, composed: true, detail }));
+      this.msg = { t: 'o', s: 'Оцениваю диалог, это может занять до минуты…' }; this.paintAct();
+      const ev = await this.post('/api/evaluations', detail);
+      this.msg = { t: 'o', s: `Готово. Итог: ${ev.total == null ? 'не рассчитан' : fmt(ev.total)}.` };
+      this.$('#res').innerHTML = `<cqa-result api-base="${esc(this.apiBase)}"></cqa-result>`;
+      this.$('#res cqa-result').evaluation = ev;
+      this.dispatchEvent(new CustomEvent('cqa-evaluated', { bubbles: true, composed: true, detail: ev }));
+    } catch (e) { this.msg = { t: 'e', s: 'Ошибка: ' + e.message }; }
     this.busy = false; this.paintTr(); this.paintAct();
   }
 }
