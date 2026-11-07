@@ -1,0 +1,183 @@
+/* <cqa-app api-base="">
+ * App shell: sidebar tabs + hash routing.
+ *   #/evaluate            upload a transcript and run an evaluation  (<cqa-home>)
+ *   #/dialogs[/<id>]      saved dialogs; a dialog card with its evaluations
+ *   #/evaluations[/<id>]  all evaluations; one evaluation             (<cqa-result>)
+ *   #/checklists[/<id>]   checklist editor                           (<cqa-checklist-editor>)
+ * Load the other components' scripts first.
+ */
+(() => {
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const fmt = n => String(Math.round(n * 100) / 100);
+const enc = encodeURIComponent;
+const when = s => esc(String(s || '').slice(0, 16).replace('T', ' '));
+const SPK = { client: 'Клиент', operator: 'Оператор', bot: 'Бот', system: 'Система' };
+const CHAN = { 'agent chat': 'чат', 'voice call': 'звонок' };
+const NAV = [['evaluate', 'Новая оценка'], ['dialogs', 'Диалоги'], ['evaluations', 'Оценки'], ['checklists', 'Чек-листы'], ['appeals', 'Апелляции']];
+const score = e => e.total == null ? '—' : `<b>${fmt(e.total)}</b> / ${fmt(e.max_total)}`;
+const flag = e => e.gross_violation ? '<span class="pill bad">Грубое нарушение</span>' : '<span class="pill ok">Нет</span>';
+
+const CSS = `
+:host{display:block;min-height:100vh;font:14px/1.45 "Segoe UI",system-ui,sans-serif;color:#17211c;
+  --line:#d8dfdb;--mut:#5b6962;--acc:#14633f;--accbg:#e4f1ea;--err:#b3261e;--side:#0f4d33}
+*{box-sizing:border-box}[hidden]{display:none!important}
+.app{display:grid;grid-template-columns:220px minmax(0,1fr);min-height:100vh}
+nav{background:var(--side);color:#fff;padding:20px 12px;position:sticky;top:0;height:100vh}
+.logo{font-size:24px;font-weight:700;padding:0 12px 18px}
+nav a,nav .soon{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;border-radius:6px;margin-bottom:4px;text-decoration:none}
+nav a{color:#dcebe3}nav a:hover{background:#ffffff1a}nav a.on{background:#1f8a57;color:#fff;font-weight:600}
+nav .soon{color:#8fb3a1;cursor:default}nav .soon small{border:1px solid #8fb3a1;border-radius:8px;padding:0 6px;font-size:11px}
+@media(max-width:760px){.app{grid-template-columns:1fr}nav{position:static;height:auto;display:flex;flex-wrap:wrap;gap:4px;padding:10px}.logo{padding:6px 12px}}
+a{color:var(--acc)}
+.page{max-width:1100px;margin:0 auto;padding:22px 16px 40px}
+h1{margin:0;font-size:24px;font-weight:600}h2{margin:22px 0 10px;font-size:16px;font-weight:600}
+.top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
+.sub{color:var(--mut);margin:4px 0 0}
+.btn,button{font:inherit;color:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:4px;padding:7px 12px;text-decoration:none;display:inline-block}
+.btn:hover,button:hover:not(:disabled){border-color:var(--acc)}button:disabled{opacity:.5;cursor:default}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
+.panel{background:#fff;border:1px solid var(--line);border-radius:6px;overflow:auto}
+table{width:100%;border-collapse:collapse}
+th,td{padding:9px 12px;border-top:1px solid var(--line);text-align:left;font-weight:400;white-space:nowrap}
+thead th{border-top:0;color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.04em;background:#fafcfb}
+td.n,th.n{text-align:right}td.t{color:var(--mut)}
+tr[data-href]{cursor:pointer}tr[data-href]:hover td{background:var(--accbg)}
+.pill{padding:2px 9px;border-radius:10px;font-size:12px;border:1px solid}
+.pill.ok{color:var(--acc);border-color:var(--acc);background:var(--accbg)}.pill.bad{color:var(--err);border-color:var(--err);background:#fbf3f2}
+.empty{padding:28px 16px;text-align:center;color:var(--mut)}
+.err{color:var(--err);padding:8px 10px;border-left:3px solid var(--err);background:#fbf3f2;margin:16px}
+.hint{padding:20px 16px;color:var(--mut)}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--mut);margin:8px 0 14px}.meta b{color:#17211c}
+audio{width:100%;margin:0 0 12px}
+.tr{max-height:60vh;overflow:auto}
+.m{display:grid;grid-template-columns:32px 70px 80px 1fr;gap:8px;padding:6px 12px;border-bottom:1px solid #edf0ee;border-left:3px solid transparent;white-space:pre-wrap;word-break:break-word}
+.m.operator{border-left-color:var(--acc);background:#f6faf8}.m.bot,.m.system{color:var(--mut);font-style:italic}
+.m .n,.m .ts{color:var(--mut);font-variant-numeric:tabular-nums}.m .s{font-weight:600;font-style:normal}
+`;
+
+class CqaApp extends HTMLElement {
+  constructor() {
+    super();
+    this.root = this.attachShadow({ mode: 'open' });
+    this.panes = {}; this.edId = null; this.tok = null;
+    this.onHash = () => this.route();
+    this.root.addEventListener('click', e => {
+      if (e.target.closest('a,button')) return;
+      const tr = e.target.closest('tr[data-href]');
+      if (tr) location.hash = tr.dataset.href;
+    });
+  }
+  get apiBase() { return this.getAttribute('api-base') || ''; }
+  connectedCallback() {
+    this.root.innerHTML = `<style>${CSS}</style><div class="app">
+      <nav><div class="logo">CQA</div>
+        ${NAV.map(([v, l]) => `<a href="#/${v}" data-v="${v}">${l}</a>`).join('')}
+        </nav>
+      <main id="main"></main></div>`;
+    this.main = this.root.getElementById('main');
+    window.addEventListener('hashchange', this.onHash);
+    this.route();
+  }
+  disconnectedCallback() { window.removeEventListener('hashchange', this.onHash); }
+
+  async get(path) {
+    const r = await fetch(this.apiBase + path);
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.detail || 'HTTP ' + r.status);
+    return d;
+  }
+  pane(v) {
+    if (!this.panes[v]) { const p = document.createElement('div'); this.main.append(p); this.panes[v] = p; }
+    return this.panes[v];
+  }
+  route() {
+    const t = this.tok = {};
+    const [v0, a] = location.hash.replace(/^#\/?/, '').split('/');
+    const v = NAV.some(n => n[0] === v0) ? v0 : 'evaluate';
+    this.root.querySelectorAll('nav a').forEach(x => x.classList.toggle('on', x.dataset.v === v));
+    const p = this.pane(v);
+    for (const k in this.panes) this.panes[k].hidden = this.panes[k] !== p;
+    this['show_' + v](p, a ? decodeURIComponent(a) : null, t);
+  }
+  fail(p, e) { p.innerHTML = `<div class="page"><p class="err">Не удалось загрузить данные: ${esc(e.message)}</p></div>`; }
+
+  /* ---------- Новая оценка ---------- */
+  show_evaluate(p) {
+    if (!p.firstChild) p.innerHTML = `<cqa-home api-base="${esc(this.apiBase)}"></cqa-home>`;
+  }
+
+  /* ---------- Чек-листы ---------- */
+  show_checklists(p, arg) {
+    const id = arg ? +arg : null;
+    if (p.firstChild && this.edId === id) return;
+    this.edId = id;
+    p.innerHTML = `<cqa-checklist-editor api-base="${esc(this.apiBase)}"${id ? ` checklist-id="${id}"` : ''}></cqa-checklist-editor>`;
+  }
+
+  /* ---------- Диалоги ---------- */
+  async show_dialogs(p, arg, t) {
+    p.innerHTML = '<div class="page"><p class="hint">Загружаю…</p></div>';
+    try {
+      const [data, evs] = await Promise.all([
+        this.get(arg ? '/api/conversations/' + enc(arg) : '/api/conversations'),
+        this.get('/api/evaluations' + (arg ? '?conversation_id=' + enc(arg) : '')),
+      ]);
+      if (this.tok !== t) return;
+      p.innerHTML = arg ? this.dialogCard(data, evs) : this.dialogList(data, evs);
+    } catch (e) { if (this.tok === t) this.fail(p, e); }
+  }
+  dialogList(cs, evs) {
+    const by = {};
+    evs.forEach(e => (by[e.conversation_id] ||= []).push(e));
+    const rows = cs.map(c => {
+      const id = c.conversation_id, es = by[id] || [];
+      return `<tr data-href="#/dialogs/${enc(id)}"><td><a href="#/dialogs/${enc(id)}">${esc(id)}</a></td>
+        <td>${CHAN[c.channel] || esc(c.channel)}</td><td>${esc(c.language)}</td><td class="n">${c.messages}</td>
+        <td class="t">${when(c.created_at)}</td>
+        <td class="n">${es.length ? `${es.length}, последняя: ${score(es[0])}` : '—'}</td></tr>`;
+    }).join('');
+    return `<div class="page"><div class="top"><div><h1>Диалоги</h1><p class="sub">Загруженные диалоги: ${cs.length}</p></div>
+      <a class="btn pri" href="#/evaluate">+ Новая оценка</a></div>
+      <div class="panel">${cs.length ? `<table><thead><tr><th>Диалог</th><th>Канал</th><th>Язык</th><th class="n">Реплик</th><th>Загружен</th><th class="n">Оценки</th></tr></thead><tbody>${rows}</tbody></table>`
+        : '<div class="empty">Диалогов пока нет. <a href="#/evaluate">Загрузите первый</a>.</div>'}</div></div>`;
+  }
+  dialogCard(c, evs) {
+    const tr = c.transcript.map((m, i) => `<div class="m ${esc(m.speaker)}"><span class="n">${i + 1}</span><span class="ts">${esc(m.timestamp)}</span><span class="s">${esc(SPK[m.speaker] || m.speaker)}</span><span>${esc(m.text)}</span></div>`).join('');
+    return `<div class="page"><div class="top"><div><a href="#/dialogs">← Все диалоги</a><h1>${esc(c.conversation_id)}</h1></div>
+      <a class="btn" href="#/evaluate">+ Новая оценка</a></div>
+      <div class="meta"><span>Канал: <b>${CHAN[c.channel] || esc(c.channel)}</b></span><span>Язык: <b>${esc(c.language)}</b></span><span>Реплик: <b>${c.transcript.length}</b></span></div>
+      ${c.audio_url ? `<audio controls preload="none" src="${esc(c.audio_url)}"></audio>` : ''}
+      <div class="panel tr">${tr}</div>
+      <h2>Оценки этого диалога</h2>${this.evalTable(evs, false)}</div>`;
+  }
+
+  /* ---------- Оценки ---------- */
+  async show_evaluations(p, arg, t) {
+        if (arg) {
+      p.innerHTML = `<div class="page"><div class="top"><a href="#/evaluations">← Все оценки</a></div>
+        <cqa-result api-base="${esc(this.apiBase)}" evaluation-id="${esc(arg)}"></cqa-result></div>`;
+      return;
+    } 
+    p.innerHTML = '<div class="page"><p class="hint">Загружаю…</p></div>';
+    try {
+      const evs = await this.get('/api/evaluations');
+      if (this.tok !== t) return;
+      p.innerHTML = `<div class="page"><div class="top"><div><h1>Оценки</h1><p class="sub">Всего оценок: ${evs.length}</p></div>
+        <a class="btn pri" href="#/evaluate">+ Новая оценка</a></div>${this.evalTable(evs, true)}</div>`;
+    } catch (e) { if (this.tok === t) this.fail(p, e); }
+  }
+    /* ---------- Апелляции ---------- */
+  show_appeals(p, arg) {
+    p.innerHTML = `<div class="page"><cqa-appeals api-base="${esc(this.apiBase)}"${arg ? ` appeal-id="${esc(arg)}"` : ''}></cqa-appeals></div>`;
+  }
+  evalTable(evs, withDialog) {
+    if (!evs.length) return '<div class="panel"><div class="empty">Оценок пока нет.</div></div>';
+    const rows = evs.map(e => `<tr data-href="#/evaluations/${enc(e.id)}"><td class="t">${when(e.created_at)}</td>
+      ${withDialog ? `<td><a href="#/dialogs/${enc(e.conversation_id)}">${esc(e.conversation_id)}</a></td>` : ''}
+      <td>${esc(e.checklist_name || 'Чек-лист ' + e.checklist_id)}, v${e.checklist_version}</td>
+      <td class="n">${score(e)}</td><td>${flag(e)}</td><td><a href="#/evaluations/${enc(e.id)}">Открыть</a></td></tr>`).join('');
+    return `<div class="panel"><table><thead><tr><th>Дата</th>${withDialog ? '<th>Диалог</th>' : ''}<th>Чек-лист</th><th class="n">Итог</th><th>Грубые ошибки</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  }
+}
+customElements.define('cqa-app', CqaApp);
+})();

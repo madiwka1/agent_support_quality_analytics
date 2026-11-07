@@ -115,7 +115,7 @@ class CqaHome extends HTMLElement {
 
   render() {
     this.root.innerHTML = `<style>${CSS}</style><div class="wrap">
-      <header><h1>Оценка диалога</h1><a class="btn" href="checklist.html">Конструктор чек-листа</a></header>
+      <header><h1>Оценка диалога</h1><a class="btn" href="#/checklists">Конструктор чек-листа</a></header>
       <div class="grid">
         <div class="panel"><h2>1. Чек-лист</h2>
           <cqa-checklist-picker api-base="${esc(this.apiBase)}"></cqa-checklist-picker>
@@ -151,7 +151,7 @@ class CqaHome extends HTMLElement {
     const scored = c.criteria.filter(k => k.type !== 'flag');
     box.innerHTML = `<table>${c.criteria.map(k => `<tr><th>${esc(k.name)}${k.na_allowed ? ' <span class="t">(N/A)</span>' : ''}</th><td class="t">${TYPE_RU[k.type]}</td><td class="n">${k.type === 'flag' ? '' : fmt(k.weight)}</td></tr>`).join('')}</table>
       <p class="sub">Сумма весов: ${fmt(scored.reduce((a, k) => a + k.weight, 0))}. Флаг грубых ошибок баллов не даёт.</p>
-      <a class="link" href="checklist.html?id=${c.id}">Изменить критерии</a>`;
+      <a class="link" href="#/checklists/${c.id}">Изменить критерии</a>`;
   }
 
   /* ---------- transcript ---------- */

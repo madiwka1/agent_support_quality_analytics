@@ -3,14 +3,16 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Оценка диалога</title>
-  <style>body { margin: 0; background: #f3f5f4; }</style>
+  <title>CQA</title>
+  <style>html,body{margin:0;background:#f3f5f4}</style>
 </head>
 <body>
-  <!-- api-base is empty when served by FastAPI; set it to the backend URL inside Dynamics 365. -->
-  <cqa-home api-base=""></cqa-home>
+  <cqa-app></cqa-app>
   <script src="components/cqa-checklist-picker.js"></script>
+  <script src="components/cqa-checklist-editor.js"></script>
   <script src="components/cqa-home.js"></script>
-  <script src="cqa-result.js"></script>
+  <script src="components/cqa-result.js"></script>
+  <script src="components/cqa-app.js"></script>
+  <script src="components/cqa-appeals.js"></script>
 </body>
 </html>

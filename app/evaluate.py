@@ -65,7 +65,7 @@ LLM_TIMEOUT = int(os.getenv("CQA_LLM_TIMEOUT", "300"))
 MAX_ATTEMPTS = 3
 _model_cache: str | None = None
 
-SYSTEM = """Ты эксперт по контролю качества диалогов контакт-центра брокера. Оцениваешь ТОЛЬКО работу оператора (speaker=operator) по заданному чек-листу. Реплики client, bot и system служат контекстом.
+SYSTEM = """Ты эксперт по контролю качества диалогов контакт-центра компании Freedom Broker. Оцениваешь ТОЛЬКО работу оператора (speaker=operator) по заданному чек-листу. Реплики client, bot и system служат контекстом.
 
 Правила:
 - Диалог может быть на русском, казахском или английском. Чек-лист один для всех языков. Приветствие должно быть на языке клиента.
@@ -363,8 +363,9 @@ def list_evaluations(conversation_id: str | None = None):
     out = []
     for r in rows:
         e = json.loads(r["result_json"])
-        out.append({k: e[k] for k in ("id", "conversation_id", "checklist_id", "checklist_version",
-                                      "created_at", "total", "max_total", "gross_violation")})
+        out.append({k: e[k] for k in ("id", "conversation_id", "checklist_id", "checklist_name",
+                                      "checklist_version", "created_at", "total", "max_total",
+                                      "gross_violation")})
     return out
 
 
