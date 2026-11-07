@@ -43,6 +43,11 @@ thead th{border-top:0;color:#2a8640;font-size:12px;font-weight:700;text-transfor
 s.was{color:var(--mut)}
 td.n,th.n{text-align:right}td.t{color:var(--mut)}
 tr[data-href]{cursor:pointer}tr[data-href]:hover td{background:var(--accbg)}
+td.x{overflow:visible}.panel:has(details[open]){overflow:visible}
+.exp{position:relative;display:inline-block}.exp summary{list-style:none;cursor:pointer;color:var(--acc);font-weight:600;padding:3px 10px;border:1px solid var(--acc);border-radius:999px;font-size:13px}
+.exp summary::-webkit-details-marker{display:none}.exp summary::after{content:" ▾"}.exp[open] summary{background:var(--accbg)}
+.exp .menu{position:absolute;right:0;top:calc(100% + 4px);z-index:5;background:#fff;border:1px solid var(--line);border-radius:8px;box-shadow:0 6px 18px #0000001f;min-width:150px;padding:4px}
+.exp .menu a{display:block;padding:7px 10px;border-radius:6px;text-decoration:none;color:#191919}.exp .menu a:hover{background:var(--accbg)}
 tr.cur td{background:var(--accbg)}tr.cur td:first-child{box-shadow:inset 3px 0 0 var(--acc)}.open{color:var(--acc)}
 .pill{padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;border:1px solid}
 .pill.ok{color:var(--acc);border-color:var(--acc);background:var(--accbg)}.pill.bad{color:var(--err);border-color:var(--err);background:#fdecec}
@@ -59,9 +64,11 @@ class CqaApp extends HTMLElement {
     this.panes = {}; this.edId = null; this.tok = null; this.trail = [];
     this.onHash = () => this.route();
     this.root.addEventListener('click', e => {
+      const t0 = e.composedPath()[0];  // close an open export menu on any click outside it or on its items
+      this.root.querySelectorAll('details.exp[open]').forEach(d => { if (!d.querySelector('summary').contains(t0)) d.open = false; });
       const back = e.composedPath()[0]?.closest?.('a.back');
       if (back && this.trail.length > 1) { e.preventDefault(); history.back(); return; }
-      if (e.target.closest('a,button')) return;
+      if (e.target.closest('a,button,details')) return;
       const tr = e.target.closest('tr[data-href]');
       if (tr) location.hash = tr.dataset.href;
     });
@@ -173,13 +180,18 @@ class CqaApp extends HTMLElement {
   show_appeals(p, arg) {
     p.innerHTML = `<div class="page"><cqa-appeals api-base="${esc(this.apiBase)}"${arg ? ` appeal-id="${esc(arg)}"` : ''}></cqa-appeals></div>`;
   }
+  exportMenu(id) {
+    const u = f => `${esc(this.apiBase)}/api/evaluations/${enc(id)}/export?format=${f}`;
+    return `<details class="exp"><summary>Экспорт</summary><div class="menu">
+      <a href="${u('xlsx')}" download>Excel (.xlsx)</a><a href="${u('json')}" download>JSON</a></div></details>`;
+  }
   evalTable(evs, withDialog, base = '#/evaluations/', curId = null) {
     if (!evs.length) return '<div class="panel"><div class="empty">Оценок пока нет.</div></div>';
     const rows = evs.map(e => `<tr data-href="${base}${enc(e.id)}"${e.id === curId ? ' class="cur"' : ''}><td class="t">${when(e.created_at)}</td>
       ${withDialog ? `<td><a href="#/dialogs/${enc(e.conversation_id)}">${esc(e.conversation_id)}</a></td>` : ''}
       <td>${esc(e.checklist_name || 'Чек-лист ' + e.checklist_id)}, v${e.checklist_version}</td>
-      <td class="n">${score(e)}</td><td>${flag(e)}</td><td>${e.id === curId ? '<b class="open">Открыта</b>' : `<a href="${base}${enc(e.id)}">Открыть</a>`}</td></tr>`).join('');
-    return `<div class="panel"><table><thead><tr><th>Дата</th>${withDialog ? '<th>Диалог</th>' : ''}<th>Чек-лист</th><th class="n">Итог</th><th>Грубые ошибки</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+      <td class="n">${score(e)}</td><td>${flag(e)}</td><td class="x">${this.exportMenu(e.id)}</td><td>${e.id === curId ? '<b class="open">Открыта</b>' : `<a href="${base}${enc(e.id)}">Открыть</a>`}</td></tr>`).join('');
+    return `<div class="panel"><table><thead><tr><th>Дата</th>${withDialog ? '<th>Диалог</th>' : ''}<th>Чек-лист</th><th class="n">Итог</th><th>Грубые ошибки</th><th></th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
   }
 }
 customElements.define('cqa-app', CqaApp);

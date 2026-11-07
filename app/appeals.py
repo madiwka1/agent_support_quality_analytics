@@ -4,14 +4,17 @@ The original evaluation is never modified. Accepted decisions are stored on the 
 final result is recomputed on demand with the same score() as the original evaluation.
 """
 import json
+import re
 import sqlite3
 import time
 import uuid
 from typing import Literal
 
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import Response
 from pydantic import BaseModel, Field
 
+from app import xlsx
 from app.checklist import DB_PATH, load_checklist
 from app.evaluate import get_evaluation, score
 
@@ -238,3 +241,86 @@ def decide(aid: str, body: DecisionBody):
 def final_result(eid: str):
     ev = get_evaluation(eid)
     return _final(ev, _cfg(ev))
+
+
+def _label(k: dict, answer: str | None, value) -> str:
+    if answer == "na":
+        return "N/A"
+    if answer == "not_evaluated":
+        return "Не оценён"
+    if k["type"] == "flag":
+        return "Нарушение выявлено" if answer == "yes" else "Не выявлено"
+    if k["type"] == "scale":
+        return f"{value:g} по шкале"
+    return "Да" if answer == "yes" else "Нет"
+
+
+def _value(k: dict, answer: str | None, value):
+    """true / false / null (N/A) for yes-no and flag criteria, the step number for scales."""
+    if answer in ("na", "not_evaluated", None):
+        return None
+    return value if k["type"] == "scale" else answer == "yes"
+
+
+def export_doc(eid: str) -> dict:
+    """The evaluation as shown in the card: the final result after appeals plus the model's original answer."""
+    ev = get_evaluation(eid)
+    fin = _final(ev, _cfg(ev))
+    crit = []
+    for k in fin["criteria"]:
+        turns = sorted({i + 1 for e in k["evidence"] for i in range(e["index"], e.get("index_to", e["index"]) + 1)})
+        rng = k.get("checked_range")
+        o = k["original"]
+        crit.append({
+            "id": k["id"], "name": k["name"], "section": k["section"], "type": k["type"],
+            "answer": _label(k, k["answer"], k["value"]), "value": _value(k, k["answer"], k["value"]),
+            "points": k["points"], "weight": k["weight"], "effective_weight": k["effective_weight"],
+            "explanation": " ".join(str(k["explanation"]).split()),
+            "evidence_turns": turns, "checked_turns": [rng["from"] + 1, rng["to"] + 1] if rng and not turns else [],
+            "appeal": {"original_answer": _label(k, o["answer"], o["value"]), "original_points": o["points"],
+                       "reason": k["review"]["reason"]} if k.get("changed") else None,
+        })
+    return {
+        "evaluation_id": ev["id"], "conversation_id": ev["conversation_id"],
+        "checklist": {"id": ev["checklist_id"], "name": ev["checklist_name"], "version": ev["checklist_version"]},
+        "model": ev.get("model"), "evaluated_at": ev["created_at"],
+        "score": {"total": fin["total"], "max_total": fin["max_total"], "original_total": fin["original_total"],
+                  "changed_by_appeal": fin["changed"], "gross_violation": fin["gross_violation"],
+                  "incomplete": bool(fin.get("incomplete"))},
+        "sections": [{"name": x["name"], "points": x["points"], "max": x["max"]} for x in fin["sections"] if x["applicable"]],
+        "criteria": crit,
+    }
+
+
+def _xlsx(d: dict) -> bytes:
+    sc = d["score"]
+    total = "не рассчитан" if sc["total"] is None else f"{sc['total']:g} из {sc['max_total']:g}"
+    if sc["changed_by_appeal"]:
+        total += f" (исходная оценка модели: {sc['original_total']:g})"
+    rows = [["Оценка диалога", d["conversation_id"]], ["Чек-лист", f"{d['checklist']['name']}, версия {d['checklist']['version']}"],
+            ["Модель", d["model"]], ["Дата оценки", d["evaluated_at"].replace("T", " ")[:16]], ["Итог", total],
+            ["Грубые нарушения", "выявлены" if sc["gross_violation"] else "не выявлены"]]
+    if sc["incomplete"]:
+        rows.append(["Внимание", "оценка неполная: часть критериев не оценена"])
+    sec_head = len(rows) + 1
+    rows += [[], ["Секция", "Баллы", "Максимум"]] + [[x["name"], x["points"], x["max"]] for x in d["sections"]]
+    head = len(rows) + 1
+    rows += [[], ["№", "Критерий", "Секция", "Ответ", "Баллы", "Вес", "Обоснование", "Реплики", "Апелляция"]]
+    for n, k in enumerate(d["criteria"], 1):
+        turns = ", ".join(map(str, k["evidence_turns"])) or (
+            f"проверен участок {k['checked_turns'][0]}–{k['checked_turns'][1]}" if k["checked_turns"] else "")
+        ap = k["appeal"]
+        rows.append([n, k["name"], k["section"], k["answer"], k["points"], k["effective_weight"] or k["weight"],
+                     k["explanation"], turns, f"было: {ap['original_answer']}. Решение: {ap['reason']}" if ap else ""])
+    return xlsx.build(rows, [20, 34, 26, 18, 10, 10, 60, 18, 40], {0, sec_head, head})
+
+
+@router.get("/evaluations/{eid}/export")
+def export_evaluation(eid: str, format: Literal["json", "xlsx"] = "json"):
+    d = export_doc(eid)
+    name = re.sub(r"[^A-Za-z0-9_.-]", "_", f"evaluation_{d['conversation_id']}_{eid}")
+    if format == "json":
+        body, mime = json.dumps(d, ensure_ascii=False, indent=2).encode(), "application/json"
+    else:
+        body, mime = _xlsx(d), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    return Response(body, media_type=mime, headers={"Content-Disposition": f'attachment; filename="{name}.{format}"'})

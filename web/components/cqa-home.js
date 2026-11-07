@@ -220,7 +220,7 @@ class CqaHome extends HTMLElement {
       r.conversation_id = d.conversation_id;
       const detail = { conversation_id: d.conversation_id, checklist_id: this.sel.checklist_id, version: this.sel.version };
       this.dispatchEvent(new CustomEvent('cqa-evaluate-requested', { bubbles: true, composed: true, detail }));
-      this.msg = { t: 'o', s: 'Оцениваю диалог, это может занять до минуты…' }; this.paintAct();
+      this.msg = { t: 'o', s: 'Диалог оценивается, подождите' }; this.paintAct();
       const ev = await this.post('/api/evaluations', detail);
       this.msg = { t: 'o', s: `Готово. Итог: ${ev.total == null ? 'не рассчитан' : fmt(ev.total)}.` };
       this.$('#res').innerHTML = `<cqa-result api-base="${esc(this.apiBase)}"></cqa-result>`;

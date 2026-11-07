@@ -17,6 +17,7 @@ import re
 import sqlite3
 import time
 import urllib.error
+import urllib.parse
 import urllib.request
 import uuid
 
@@ -398,6 +399,7 @@ def evaluate(req: EvaluateRequest):
         "checklist_version": cfg["version"],
         "checklist_name": cfg["name"],
         "model": LLM_MODEL or _model_cache,
+        "llm_host": urllib.parse.urlparse(LLM_URL).hostname,
         "created_at": time.strftime("%Y-%m-%dT%H:%M:%S%z"),
         **trace,
         **score(cfg, items),
