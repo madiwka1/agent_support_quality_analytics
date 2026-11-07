@@ -10,6 +10,7 @@
 (() => {
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = n => String(Math.round(n * 100) / 100);
+const plural = (n, one, few, many) => `${n} ${n % 10 === 1 && n % 100 !== 11 ? one : n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20) ? few : many}`;
 const SPK = { client: 'client', operator: 'operator', bot: 'bot', system: 'system', 'клиент': 'client', 'оператор': 'operator', 'бот': 'bot', 'система': 'system' };
 const SPK_RU = { client: 'Клиент', operator: 'Оператор', bot: 'Бот', system: 'Система' };
 const TYPE_RU = { yesno: 'Да/Нет', scale: 'Шкала', flag: 'Флаг' };
@@ -54,7 +55,7 @@ function problem(r) {
 }
 
 const CSS = `
-:host{display:block;font:14px/1.45 "Segoe UI",system-ui,sans-serif;color:#17211c;--line:#d8dfdb;--mut:#5b6962;--acc:#14633f;--accbg:#e4f1ea;--err:#b3261e}
+:host{display:block;font:15px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#191919;--line:#e1e4e8;--mut:#5c5c5c;--acc:#2a8640;--accbg:#e8f5e9;--err:#d32f2f}
 *{box-sizing:border-box}
 .wrap{max-width:1100px;margin:0 auto;padding:22px 16px 40px}
 header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:18px}
@@ -67,28 +68,28 @@ button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:
 :focus-visible{outline:2px solid var(--acc);outline-offset:2px}
 .grid{display:grid;grid-template-columns:minmax(300px,2fr) 3fr;gap:20px;align-items:start}
 @media(max-width:820px){.grid{grid-template-columns:1fr}}
-.panel{background:#fff;border:1px solid var(--line);border-radius:6px;padding:16px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 3px #0000000f,0 4px 14px #00000008;padding:18px}
 .sub{color:var(--mut);margin:10px 0 0}
 table{width:100%;border-collapse:collapse;margin-top:12px}
 td,th{padding:5px 4px;border-top:1px solid var(--line);text-align:left;font-weight:400}
 td.n{text-align:right;font-weight:600}td.t{color:var(--mut)}
 .link{display:inline-block;margin-top:12px;color:var(--acc)}
-.drop{display:block;border:2px dashed #9db5a8;border-radius:6px;padding:34px 16px;text-align:center;cursor:pointer;background:#fafcfb}
+.drop{display:block;border:2px dashed #a0a0a0;border-radius:6px;padding:34px 16px;text-align:center;cursor:pointer;background:#f8f9fa}
 .drop:hover,.drop.over{border-color:var(--acc);background:var(--accbg)}
 .drop strong{display:block;font-size:16px;margin-bottom:4px}.drop span{color:var(--mut)}
 details{margin:12px 0}summary{cursor:pointer;color:var(--acc)}
 textarea,select{width:100%;margin-top:8px;padding:8px 9px;border:1px solid var(--line);border-radius:4px;font:inherit;background:#fff;color:inherit}
 details button{margin-top:8px}
-.meta{margin:14px 0 8px;display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--mut)}.meta b{color:#17211c}
-.err{color:var(--err);margin:12px 0;padding:8px 10px;border-left:3px solid var(--err);background:#fbf3f2}
+.meta{margin:14px 0 8px;display:flex;flex-wrap:wrap;gap:6px 16px;color:var(--mut)}.meta b{color:#191919}
+.err{color:var(--err);margin:12px 0;padding:8px 10px;border-left:3px solid var(--err);background:#fdecec}
 .pv{max-height:340px;overflow:auto;border:1px solid var(--line);border-radius:4px}
-.m{display:grid;grid-template-columns:52px 76px 1fr;gap:8px;padding:6px 10px;border-bottom:1px solid #edf0ee;border-left:3px solid transparent;white-space:pre-wrap;word-break:break-word}
+.m{display:grid;grid-template-columns:52px 76px 1fr;gap:8px;padding:6px 10px;border-bottom:1px solid #eceef0;border-left:3px solid transparent;white-space:pre-wrap;word-break:break-word}
 .m:last-child{border-bottom:0}
-.m.operator{border-left-color:var(--acc);background:#f6faf8}
+.m.operator{border-left-color:var(--acc);background:#f0f8f0}
 .m.bot,.m.system{color:var(--mut);font-style:italic}
 .m .s{font-weight:600;font-style:normal}.m .ts{color:var(--mut);font-variant-numeric:tabular-nums;overflow:hidden;text-overflow:ellipsis}
 .act{margin-top:20px;display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;justify-content:space-between;background:#fff;border:1px solid var(--line);border-radius:6px;padding:14px 16px}
-.act .sum{color:var(--mut)}.act .sum b{color:#17211c}
+.act .sum{color:var(--mut)}.act .sum b{color:#191919}
 .ok{color:var(--acc)}.bad{color:var(--err)}
 `;
 
@@ -115,7 +116,7 @@ class CqaHome extends HTMLElement {
 
   render() {
     this.root.innerHTML = `<style>${CSS}</style><div class="wrap">
-      <header><h1>Оценка диалога</h1><a class="btn" href="#/checklists">Конструктор чек-листа</a></header>
+      <header><h1>Оценка диалога</h1></header>
       <div class="grid">
         <div class="panel"><h2>1. Чек-лист</h2>
           <cqa-checklist-picker api-base="${esc(this.apiBase)}"></cqa-checklist-picker>
@@ -160,9 +161,9 @@ class CqaHome extends HTMLElement {
     this.msg = null; this.idx = 0; this.file = name; this.$('#res').innerHTML = '';
     try {
       const t = text.trim();
-      if (!t) throw new Error('Файл пустой.');
+      if (!t) throw new Error(name === 'вставленный текст' ? 'Вставьте текст диалога.' : 'Файл пустой.');
       let recs;
-      if (t[0] === '{' || t[0] === '[') {
+      if (t[0] === '{' || (t[0] === '[' && !LINE.test(t.split('\n')[0]))) {
         try { recs = toRecords(JSON.parse(t)); } catch (e) { throw new Error('Файл похож на JSON, но не читается: ' + e.message); }
       } else recs = parseText(t);
       this.recs = recs.map(normalize); this.err = null;
@@ -187,7 +188,7 @@ class CqaHome extends HTMLElement {
   paintAct() {
     const r = this.rec(), ok = this.sel && this.cfg && r && !problem(r) && !this.busy;
     const cl = this.sel ? `<b>${esc(this.sel.name)}</b>, версия ${this.sel.version}` : 'не выбран';
-    const dl = r ? `<b>${esc(r.conversation_id || 'новый диалог')}</b> (${r.language}, ${r.transcript.length} реплик)` : 'не загружен';
+    const dl = r ? `<b>${esc(r.conversation_id || 'новый диалог')}</b> (${r.language}, ${plural(r.transcript.length, 'реплика', 'реплики', 'реплик')})` : 'не загружен';
     this.$('#act').innerHTML = `<div class="sum">Чек-лист: ${cl}. Диалог: ${dl}.
       ${this.msg ? `<br><span class="${this.msg.t === 'e' ? 'bad' : 'ok'}">${esc(this.msg.s)}</span>` : ''}</div>
       <button class="pri" data-act="run" ${ok ? '' : 'disabled'}>${this.busy ? 'Оцениваю…' : 'Запустить оценку'}</button>`;

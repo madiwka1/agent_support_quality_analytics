@@ -46,15 +46,15 @@ class CqaChecklistPicker extends HTMLElement {
       if (this.pin && !this.versions.some(v => v.version === this.pin)) this.pin = null;
       this.paint(); this.emit();
     } catch (e) {
-      this.root.innerHTML = `<span style="color:#b3261e;font:14px 'Segoe UI',sans-serif">Не удалось загрузить чек-листы: ${esc(e.message)}</span>`;
+      this.root.innerHTML = `<span style="color:#d32f2f;font:14px 'Segoe UI',sans-serif">Не удалось загрузить чек-листы: ${esc(e.message)}</span>`;
     }
   }
   paint() {
     this.root.innerHTML = `<style>
-      :host{display:block;font:14px/1.4 "Segoe UI",system-ui,sans-serif;color:#17211c}
-      .r{display:flex;flex-wrap:wrap;gap:12px}label{display:block;color:#5b6962}
-      select{display:block;margin-top:3px;min-width:240px;padding:7px 9px;border:1px solid #d8dfdb;border-radius:4px;background:#fff;color:#17211c;font:inherit}
-      select:focus-visible{outline:2px solid #14633f;outline-offset:1px}</style>
+      :host{display:block;font:15px/1.5 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#191919}
+      .r{display:flex;flex-wrap:wrap;gap:12px}label{display:block;color:#5c5c5c}
+      select{display:block;margin-top:3px;min-width:240px;padding:7px 9px;border:1px solid #e1e4e8;border-radius:4px;background:#fff;color:#191919;font:inherit}
+      select:focus-visible{outline:2px solid #2a8640;outline-offset:1px}</style>
       <div class="r">
         <label>Чек-лист для оценки<select data-k="cl">${this.lists.map(l => `<option value="${l.id}" ${l.id === this.cid ? 'selected' : ''}>${esc(l.name)}</option>`).join('')}</select></label>
         <label>Версия<select data-k="ver"><option value="" ${this.pin ? '' : 'selected'}>Последняя (v${this.versions[0]?.version ?? '?'})</option>

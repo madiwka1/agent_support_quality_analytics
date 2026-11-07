@@ -15,8 +15,9 @@ const tot = n => n == null ? '—' : fmt(n);
 const pill = s => `<span class="pill ${ST[s][0]}">${ST[s][1]}</span>`;
 
 const CSS = `
-:host{display:block;font:14px/1.45 "Segoe UI",system-ui,sans-serif;color:#17211c;--line:#d8dfdb;--mut:#5b6962;--acc:#14633f;--accbg:#e4f1ea;--err:#b3261e;--warn:#8a5300}
+:host{display:block;font:15px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#191919;--line:#e1e4e8;--mut:#5c5c5c;--acc:#2a8640;--accbg:#e8f5e9;--err:#d32f2f;--warn:#b26a00}
 *{box-sizing:border-box}a{color:var(--acc)}
+.back{display:inline-flex;align-items:center;gap:6px;margin-bottom:10px;padding:7px 16px 7px 12px;border-radius:999px;background:var(--acc);color:#fff;font-weight:600;text-decoration:none;box-shadow:0 2px 6px #2a864055}.back:hover{background:#226d34}
 h1{margin:0;font-size:24px;font-weight:600}h3{margin:0;font-size:15px}
 .top{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin-bottom:16px}
 .sub{color:var(--mut);margin:4px 0 0}
@@ -26,29 +27,29 @@ button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:
 button:disabled{opacity:.5;cursor:default}
 select,textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:4px;background:#fff}
 .flt select{width:auto}
-.panel{background:#fff;border:1px solid var(--line);border-radius:6px;overflow:auto}
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 3px #0000000f,0 4px 14px #00000008;overflow:auto}
 table{width:100%;border-collapse:collapse}
 th,td{padding:9px 12px;border-top:1px solid var(--line);text-align:left;font-weight:400}
-thead th{border-top:0;color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.04em;background:#fafcfb}
+thead th{border-top:0;color:var(--mut);font-size:12px;text-transform:uppercase;letter-spacing:.04em;background:#f8f9fa}
 td.n,th.n{text-align:right}td.t{color:var(--mut)}
 tr[data-href]{cursor:pointer}tr[data-href]:hover td{background:var(--accbg)}
 .pill{padding:2px 9px;border-radius:10px;font-size:12px;border:1px solid;white-space:nowrap}
-.pill.ok{color:var(--acc);border-color:var(--acc);background:var(--accbg)}.pill.bad{color:var(--err);border-color:var(--err);background:#fbf3f2}
-.pill.wait,.pill.mid{color:var(--warn);border-color:var(--warn);background:#faf5ea}
+.pill.ok{color:var(--acc);border-color:var(--acc);background:var(--accbg)}.pill.bad{color:var(--err);border-color:var(--err);background:#fdecec}
+.pill.wait,.pill.mid{color:var(--warn);border-color:var(--warn);background:#fff4e0}
 .empty{padding:28px 16px;text-align:center;color:var(--mut)}
-.err{color:var(--err);padding:8px 10px;border-left:3px solid var(--err);background:#fbf3f2;margin:0 0 12px}
+.err{color:var(--err);padding:8px 10px;border-left:3px solid var(--err);background:#fdecec;margin:0 0 12px}
 .note{padding:8px 12px;margin:0 0 12px;border-left:3px solid var(--acc);background:var(--accbg)}
-.meta{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--mut);margin:6px 0 16px}.meta b{color:#17211c}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;color:var(--mut);margin:6px 0 16px}.meta b{color:#191919}
 .it{background:#fff;border:1px solid var(--line);border-radius:6px;padding:16px;margin-bottom:14px}
 .row{display:flex;gap:10px;align-items:baseline;justify-content:space-between}
-.badge{white-space:nowrap;padding:2px 9px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid var(--line);background:#f4f6f5}
+.badge{white-space:nowrap;padding:2px 9px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid var(--line);background:#f1f2f4}
 .pts{color:var(--mut);margin:2px 0 8px}
-.blk{padding:8px 12px;margin:8px 0;border-left:3px solid var(--line);background:#fafcfb}
+.blk{padding:8px 12px;margin:8px 0;border-left:3px solid var(--line);background:#f8f9fa}
 .blk b,.res b{display:block;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
-.blk.cmt{border-color:var(--warn);background:#faf5ea}
+.blk.cmt{border-color:var(--warn);background:#fff4e0}
 .frag{border:1px solid var(--line);border-radius:4px;margin:8px 0;max-height:260px;overflow:auto}
-.m{display:grid;grid-template-columns:28px 52px 70px 1fr;gap:6px;padding:5px 8px;border-left:3px solid transparent;border-bottom:1px solid #edf0ee;white-space:pre-wrap;word-break:break-word}
-.m.operator{border-left-color:var(--acc);background:#f6faf8}.m.bot,.m.system{color:var(--mut);font-style:italic}
+.m{display:grid;grid-template-columns:28px 52px 70px 1fr;gap:6px;padding:5px 8px;border-left:3px solid transparent;border-bottom:1px solid #eceef0;white-space:pre-wrap;word-break:break-word}
+.m.operator{border-left-color:var(--acc);background:#f0f8f0}.m.bot,.m.system{color:var(--mut);font-style:italic}
 .m .n,.m .ts{color:var(--mut)}.m .s{font-weight:600;font-style:normal}
 .m.hl{background:#fff3c4;outline:2px solid #e0b400;outline-offset:-2px}
 .gap{text-align:center;color:var(--mut);padding:2px}
@@ -58,7 +59,7 @@ audio{width:100%;margin:8px 0}
 .dec .newa,.dec .why{margin:8px 0 0 22px}.dec .why{margin-left:0}
 .dec small{display:block;color:var(--mut);margin-bottom:3px}
 .res{padding:8px 12px;border-left:3px solid;margin-top:10px}
-.res.accept{border-color:var(--acc);background:var(--accbg)}.res.reject{border-color:var(--err);background:#fbf3f2}
+.res.accept{border-color:var(--acc);background:var(--accbg)}.res.reject{border-color:var(--err);background:#fdecec}
 .bar{display:flex;gap:12px;align-items:center;margin-top:6px}.derr{color:var(--err)}
 `;
 
@@ -162,7 +163,7 @@ class CqaAppeals extends HTMLElement {
     const d = this.detail, pending = d.status === 'pending';
     const totals = pending ? `Итог сейчас: <b>${tot(d.current_total)}</b> / ${fmt(d.max_total)}`
       : `Итог: было <b>${tot(d.original_total)}</b>, после решения <b>${tot(d.result?.total)}</b> / ${fmt(d.max_total)}`;
-    return `<div class="top"><div><a href="#/appeals">← Все апелляции</a><h1>Апелляция ${esc(d.id)} ${pill(d.status)}</h1></div>
+    return `<div class="top"><div><a class="back" href="#/appeals">← Назад</a><h1>Апелляция ${esc(d.id)} ${pill(d.status)}</h1></div>
         <a href="#/evaluations/${enc(d.evaluation_id)}">Открыть оценку</a></div>
       ${this.msg ? `<div class="note">${esc(this.msg)}</div>` : ''}
       <div class="meta"><span>Диалог: <a href="#/dialogs/${enc(d.conversation_id)}">${esc(d.conversation_id)}</a></span>

@@ -416,12 +416,20 @@ def list_evaluations(conversation_id: str | None = None):
         q, args = q + " WHERE conversation_id = ?", [conversation_id]
     with _db() as con:
         rows = con.execute(q + " ORDER BY created_at DESC", args).fetchall()
+        try:  # each resolved appeal stores the rescored result with all decisions so far; the latest wins
+            appealed = {a["evaluation_id"]: json.loads(a["result_json"]) for a in con.execute(
+                "SELECT evaluation_id, result_json FROM appeals WHERE result_json IS NOT NULL ORDER BY resolved_at, rowid")}
+        except sqlite3.OperationalError:
+            appealed = {}
     out = []
     for r in rows:
         e = json.loads(r["result_json"])
-        out.append({k: e[k] for k in ("id", "conversation_id", "checklist_id", "checklist_name",
-                                      "checklist_version", "created_at", "total", "max_total",
-                                      "gross_violation")})
+        row = {k: e.get(k) for k in ("id", "conversation_id", "checklist_id", "checklist_name",
+                                     "checklist_version", "created_at", "total", "max_total",
+                                     "gross_violation")}
+        if fin := appealed.get(e["id"]):
+            row.update(original_total=e["total"], total=fin["total"], gross_violation=fin["gross_violation"])
+        out.append(row)
     return out
 
 

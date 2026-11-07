@@ -14,56 +14,59 @@ const secs = t => {
   if (m) return m[3] !== undefined ? +m[1] * 3600 + +m[2] * 60 + +m[3] : +m[1] * 60 + +m[2];
   const d = Date.parse(t); return isNaN(d) ? NaN : d / 1000;
 };
+const mmss = s => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
+const relTs = (t, t0) => /^\d{1,2}:\d{2}/.test(t || '') || !isFinite(secs(t) - t0) ? (t || '') : mmss(Math.max(secs(t) - t0, 0));
 const short = (t, n = 90) => t.length > n ? t.slice(0, n) + '…' : t;
 const lblOf = (type, a, v) => a === 'na' ? 'N/A' : a === 'not_evaluated' ? 'Не оценён' : type === 'flag' ? (a === 'yes' ? 'Нарушение выявлено' : 'Не выявлено')
   : type === 'scale' ? `${fmt(v)} по шкале` : (a === 'yes' ? 'Да' : 'Нет');
 
 const CSS = `
-:host{display:block;font:14px/1.45 "Segoe UI",system-ui,sans-serif;color:#17211c;--line:#d8dfdb;--mut:#5b6962;--acc:#14633f;--accbg:#e4f1ea;--err:#b3261e;--warn:#8a5300}
+:host{display:block;font:15px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#191919;--line:#e1e4e8;--mut:#5c5c5c;--acc:#2a8640;--accbg:#e8f5e9;--err:#d32f2f;--warn:#b26a00}
 *{box-sizing:border-box}
 .wrap{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:20px;align-items:start;margin-top:20px}
 @media(max-width:900px){.wrap{grid-template-columns:1fr}}
-.panel{background:#fff;border:1px solid var(--line);border-radius:6px;padding:16px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 3px #0000000f,0 4px 14px #00000008;padding:18px}
 h2{margin:0 0 10px;font-size:16px;font-weight:600}
 button,.btn{font:inherit;color:inherit;cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:4px;padding:7px 12px}
 button:hover:not(:disabled){border-color:var(--acc)}
 button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
 .head{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:center;margin-bottom:12px}.head .btn{margin-left:auto}
-.total{font-size:34px;font-weight:700;color:var(--acc)}.total small{font-size:16px;color:var(--mut);font-weight:400}
+.total{display:flex;align-items:center;gap:14px}.gauge{width:92px;height:92px}.gauge circle{fill:none;stroke-width:4.5}
+.gauge text{font-weight:800;fill:#191919;text-anchor:middle}.total small{font-size:14px;color:var(--mut)}
 .pill{padding:3px 10px;border-radius:12px;font-size:13px;border:1px solid}
-.pill.ok{color:var(--acc);border-color:var(--acc);background:var(--accbg)}.pill.bad{color:var(--err);border-color:var(--err);background:#fbf3f2}
+.pill.ok{color:var(--acc);border-color:var(--acc);background:var(--accbg)}.pill.bad{color:var(--err);border-color:var(--err);background:#fdecec}
 .meta{color:var(--mut);font-size:13px}
-.sum,.why{background:#f6faf8;border-left:3px solid var(--acc);padding:8px 12px;margin:10px 0}
+.sum,.why{background:#f0f8f0;border-left:3px solid var(--acc);padding:8px 12px;margin:10px 0}
 .sum b,.why b,.rev b{display:block;font-size:11px;color:var(--mut);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
-.why{background:#fafcfb;border-color:var(--line);margin:8px 0}
+.why{background:#f8f9fa;border-color:var(--line);margin:8px 0}
 .was{margin:6px 0;color:var(--mut)}
-.note{padding:8px 12px;margin:10px 0;border-left:3px solid var(--acc);background:var(--accbg)}.note.e{border-color:var(--err);background:#fbf3f2}
+.note{padding:8px 12px;margin:10px 0;border-left:3px solid var(--acc);background:var(--accbg)}.note.e{border-color:var(--err);background:#fdecec}
 .secs{margin:8px 0 16px}.sec{display:grid;grid-template-columns:minmax(120px,1fr) 2fr 90px;gap:10px;align-items:center;padding:3px 0}
-.bar{height:8px;background:#edf0ee;border-radius:4px;overflow:hidden}.bar i{display:block;height:100%;background:var(--acc)}
+.bar{height:10px;background:#eceef0;border-radius:999px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#2a8640,#4fb84e);border-radius:999px}
 .sec .v{text-align:right;font-variant-numeric:tabular-nums}
-.cr{border-top:1px solid var(--line);padding:12px 0}
+.cr{border-top:1px solid var(--line);padding:14px 0}.cr h3{font-size:16px}
 .top{display:flex;gap:10px;align-items:baseline;justify-content:space-between}.top h3{margin:0;font-size:15px}
 .sect{color:var(--mut);font-size:12px}
-.badge{white-space:nowrap;padding:2px 9px;border-radius:10px;font-size:13px;font-weight:600;border:1px solid}
-.badge.good{color:var(--acc);border-color:var(--acc);background:var(--accbg)}.badge.bad{color:var(--err);border-color:var(--err);background:#fbf3f2}
-.badge.mid{color:var(--warn);border-color:var(--warn);background:#faf5ea}.badge.na{color:var(--mut);border-color:var(--line);background:#f4f6f5}
+.badge{white-space:nowrap;padding:3px 11px;border-radius:999px;font-size:13px;font-weight:700;border:1px solid}
+.badge.good{color:var(--acc);border-color:var(--acc);background:var(--accbg)}.badge.bad{color:var(--err);border-color:var(--err);background:#fdecec}
+.badge.mid{color:var(--warn);border-color:var(--warn);background:#fff4e0}.badge.na{color:var(--mut);border-color:var(--line);background:#f1f2f4}
 .pts{color:var(--mut);margin:2px 0 6px}
 .rev{padding:8px 12px;margin:8px 0;border-left:3px solid}
-.rev.yes{border-color:var(--acc);background:var(--accbg)}.rev.no{border-color:var(--err);background:#fbf3f2}.rev.wait{border-color:var(--warn);background:#faf5ea}
+.rev.yes{border-color:var(--acc);background:var(--accbg)}.rev.no{border-color:var(--err);background:#fdecec}.rev.wait{border-color:var(--warn);background:#fff4e0}
 .pick{display:flex;gap:8px;align-items:center;margin-top:8px;font-weight:600;color:var(--acc);cursor:pointer}
 .abox textarea{width:100%;margin-top:6px;padding:8px 9px;border:1px solid var(--line);border-radius:4px;font:inherit;resize:vertical}
 .abar{position:sticky;bottom:0;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;background:#fff;border-top:1px solid var(--line);padding:12px 0 0;margin-top:8px}
 .aerr{color:var(--err);flex:1}
 .chips{display:flex;flex-direction:column;gap:4px;margin-top:6px}
-button.chip{text-align:left;background:#fafcfb;padding:5px 8px}
+button.chip{text-align:left;background:#f8f9fa;padding:5px 8px}
 button.chip:hover{background:var(--accbg)}button.chip.rng{color:var(--mut);background:#fff}
 .tr{position:sticky;top:12px;max-height:80vh;overflow:auto}
 audio{width:100%;margin-bottom:10px}
-.m{display:grid;grid-template-columns:28px 52px 70px 1fr;gap:6px;padding:5px 6px;border-left:3px solid transparent;border-bottom:1px solid #edf0ee;white-space:pre-wrap;word-break:break-word}
-.m.operator{border-left-color:var(--acc);background:#f6faf8}.m.bot,.m.system{color:var(--mut);font-style:italic}
+.m{display:grid;grid-template-columns:28px 52px 70px 1fr;gap:6px;padding:5px 6px;border-left:3px solid transparent;border-bottom:1px solid #eceef0;white-space:pre-wrap;word-break:break-word}
+.m.operator{border-left-color:var(--acc);background:#f0f8f0}.m.bot,.m.system{color:var(--mut);font-style:italic}
 .m .n,.m .ts{color:var(--mut);font-variant-numeric:tabular-nums}.m .s{font-weight:600;font-style:normal}
 .m.hl{background:#fff3c4;outline:2px solid #e0b400;outline-offset:-2px}
-.err{color:var(--err);padding:8px 10px;border-left:3px solid var(--err);background:#fbf3f2}
+.err{color:var(--err);padding:8px 10px;border-left:3px solid var(--err);background:#fdecec}
 `;
 
 class CqaResult extends HTMLElement {
@@ -119,6 +122,14 @@ class CqaResult extends HTMLElement {
     const r = k.effective_weight ? k.points / k.effective_weight : 0;
     return [r >= 0.999 ? 'good' : r <= 0 ? 'bad' : 'mid', l];
   }
+  gauge(e) {
+    const pc = e.total == null ? 0 : Math.max(0, Math.min(100, e.total / e.max_total * 100));
+    const col = pc >= 85 ? '#2a8640' : pc >= 60 ? '#b26a00' : '#d32f2f';
+    return `<svg class="gauge" viewBox="0 0 42 42" role="img" aria-label="Итог ${e.total == null ? 'не рассчитан' : fmt(e.total)}">
+      <circle r="15.915" cx="21" cy="21" stroke="#eceef0"></circle>
+      <circle r="15.915" cx="21" cy="21" stroke="${col}" stroke-linecap="round" stroke-dasharray="${pc} ${100 - pc}" stroke-dashoffset="25"></circle>
+      <text x="21" y="24.5" font-size="${e.total == null ? 5 : 9}">${e.total == null ? 'нет' : fmt(e.total)}</text></svg>`;
+  }
   ptsLine(k) {
     if (k.answer === 'not_evaluated') return 'Не оценён, в итог не входит.';
     if (k.answer === 'na') return `Исключён из расчёта, вес ${fmt(k.weight)} перераспределён между остальными.`;
@@ -131,14 +142,14 @@ class CqaResult extends HTMLElement {
     const e = this.fin || this.ev;
     if (this.err && !e) { this.root.innerHTML = `<style>${CSS}</style><p class="err">${esc(this.err)}</p>`; return; }
     if (!e) { this.root.innerHTML = ''; return; }
-    const tr = this.conv?.transcript || [];
+    const tr = this.conv?.transcript || [], t0 = secs(tr[0]?.timestamp), ts = t => esc(relTs(t, t0));
     const secs_ = e.sections.filter(s => s.applicable).map(s => `<div class="sec"><span>${esc(s.name)}</span>
       <div class="bar"><i style="width:${s.max ? Math.min(100, s.points / s.max * 100) : 0}%"></i></div>
       <span class="v">${fmt(s.points)} / ${fmt(s.max)}</span></div>`).join('');
     const crit = e.criteria.map(k => {
       const [cls, lbl] = this.badge(k), r = k.checked_range, ap = this.appOf(k.id);
-      const chips = k.evidence.map(x => `<button class="chip" data-from="${x.index}" data-to="${x.index_to ?? x.index}">№${x.index + 1} · ${esc(x.timestamp)} · ${esc(SPK[x.speaker] || x.speaker)}: ${esc(short(x.text))}</button>`).join('');
-      const rng = r && !k.evidence.length ? `<button class="chip rng" data-from="${r.from}" data-to="${r.to}">Проверенный участок: реплики ${r.from + 1}–${r.to + 1} (${esc(r.from_ts)} – ${esc(r.to_ts)})</button>` : '';
+      const chips = k.evidence.map(x => `<button class="chip" data-from="${x.index}" data-to="${x.index_to ?? x.index}">№${x.index + 1} · ${ts(x.timestamp)} · ${esc(SPK[x.speaker] || x.speaker)}: ${esc(short(x.text))}</button>`).join('');
+      const rng = r && !k.evidence.length ? `<button class="chip rng" data-from="${r.from}" data-to="${r.to}">Проверенный участок: реплики ${r.from + 1}–${r.to + 1} (${ts(r.from_ts)} – ${ts(r.to_ts)})</button>` : '';
       let extra = '';
       if (k.changed) extra += `<div class="rev yes"><b>Оценка изменена после апелляции</b>Было: ${esc(lblOf(k.type, k.original.answer, k.original.value))}${k.original.points == null ? '' : ` (${fmt(k.original.points)} б.)`}, стало: ${esc(lbl)}. Решение проверяющего: ${esc(k.review?.reason || '')}</div>`;
       else if (ap?.st === 'reject') extra += `<div class="rev no"><b>Апелляция отклонена</b>${esc(ap.i.reason || '')}</div>`;
@@ -151,11 +162,11 @@ class CqaResult extends HTMLElement {
         <div class="why"><b>Обоснование</b>${esc(k.explanation)}</div>
         <div class="chips">${chips}${rng}</div>${extra}${pick}</article>`;
     }).join('');
-    const trHtml = tr.map((m, i) => `<div class="m ${esc(m.speaker)}" data-i="${i}"><span class="n">${i + 1}</span><span class="ts">${esc(m.timestamp)}</span><span class="s">${esc(SPK[m.speaker] || m.speaker)}</span><span>${esc(m.text)}</span></div>`).join('');
+    const trHtml = tr.map((m, i) => `<div class="m ${esc(m.speaker)}" data-i="${i}"><span class="n">${i + 1}</span><span class="ts">${ts(m.timestamp)}</span><span class="s">${esc(SPK[m.speaker] || m.speaker)}</span><span>${esc(m.text)}</span></div>`).join('');
     const audio = this.conv?.audio_url ? `<audio controls preload="none" src="${esc(this.conv.audio_url)}"></audio>` : '';
     this.root.innerHTML = `<style>${CSS}</style><div class="wrap">
       <div class="panel">
-        <div class="head"><div class="total">${e.total == null ? 'не рассчитан' : fmt(e.total)}<small> / ${fmt(e.max_total)}</small></div>
+        <div class="head"><div class="total">${this.gauge(e)}<small>из ${fmt(e.max_total)}</small></div>
           <span class="pill ${e.gross_violation ? 'bad' : 'ok'}">${e.gross_violation ? 'Грубое нарушение выявлено' : 'Грубых нарушений не выявлено'}</span>
           ${e.incomplete ? '<span class="pill bad">Оценка неполная</span>' : ''}
           ${this.mode ? '' : '<button class="btn" data-act="appeal">Оспорить оценку</button>'}</div>

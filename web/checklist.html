@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Конструктор чек-листа</title>
   <style>
-    body { margin: 0; background: #f3f5f4; font: 14px "Segoe UI", system-ui, sans-serif; }
-    a.back { display: block; max-width: 1180px; margin: 0 auto; padding: 14px 16px 0; color: #14633f; text-decoration: none; }
-    a.back:hover { text-decoration: underline; }
+    body { margin: 0; background: #f5f6f7; font: 14px "Segoe UI", system-ui, sans-serif; }
+    a.back { display: inline-flex; margin: 14px 16px 0; padding: 7px 16px 7px 12px; border-radius: 999px; background: #2a8640; color: #fff; font-weight: 600; text-decoration: none; }
+    a.back:hover { background: #226d34; }
   </style>
 </head>
 <body>
-  <a class="back" href="/">&larr; К оценке диалога</a>
+  <a class="back" href="/">&larr; Назад</a>
   <!-- api-base is empty when served by FastAPI; set it to the backend URL inside Dynamics 365. -->
   <cqa-checklist-editor api-base=""></cqa-checklist-editor>
   <script>

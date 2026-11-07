@@ -21,34 +21,38 @@ const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': 
 const fmt = n => String(Math.round(n * 100) / 100);
 
 const CSS = `
-:host{display:block;font:14px/1.45 "Segoe UI",system-ui,sans-serif;color:#17211c;
-  --line:#d8dfdb;--mut:#5b6962;--acc:#14633f;--accbg:#e4f1ea;--err:#b3261e;--warn:#8a5300;--bg:#fff}
+:host{display:block;font:15px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif;color:#191919;
+  --line:#e1e4e8;--mut:#5c5c5c;--acc:#2a8640;--accbg:#e8f5e9;--err:#d32f2f;--warn:#b26a00;--bg:#fff}
 *{box-sizing:border-box}
 .wrap{max-width:1180px;margin:0 auto;padding:20px 16px 40px}
 header{display:flex;flex-wrap:wrap;gap:12px 24px;align-items:flex-end;justify-content:space-between;margin-bottom:14px}
-h2{margin:0 0 6px;font-size:22px;font-weight:600}
+h2{margin:0 0 6px;font-size:26px;font-weight:700}
 input,select,textarea,button{font:inherit;color:inherit}
 input,select,textarea{width:100%;padding:7px 9px;border:1px solid var(--line);border-radius:4px;background:#fff}
 textarea{resize:vertical}
 input:focus-visible,select:focus-visible,textarea:focus-visible,button:focus-visible{outline:2px solid var(--acc);outline-offset:1px}
-input:disabled,select:disabled{background:#f1f3f2;color:var(--mut)}
+input:disabled,select:disabled{background:#f1f2f4;color:var(--mut)}
 .cl-name{font-size:15px;min-width:320px}
 .h-right{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
 .ver{font-weight:600}.state{color:var(--mut)}.state.d{color:var(--warn)}
 button{cursor:pointer;border:1px solid var(--line);background:#fff;border-radius:4px;padding:7px 12px}
 button:hover:not(:disabled){border-color:var(--acc)}
 button:disabled{opacity:.45;cursor:default}
-button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600}
-.share{display:flex;height:34px;border-radius:4px;overflow:hidden;border:1px solid var(--line);margin:6px 0 4px}
-.share div{display:flex;align-items:center;padding:0 8px;font-size:12px;color:#fff;overflow:hidden;white-space:nowrap;border-right:1px solid #fff8}
-.share div.on{outline:2px solid #17211c;outline-offset:-2px}
-.sumline{color:var(--mut);margin-bottom:8px}.sumline b{color:#17211c}.sumline b.bad{color:var(--warn)}
+button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:600;border-radius:8px}
+.share{display:flex;flex-wrap:wrap;gap:18px 28px;align-items:center;background:var(--bg);border:1px solid var(--line);border-radius:12px;padding:14px 18px;margin:6px 0 10px;box-shadow:0 1px 3px #0000000d}
+.donut{width:150px;height:150px;flex:none}.donut circle{fill:none;stroke-width:5;transition:stroke-width .15s}.donut circle.on{stroke-width:7.5}
+.donut text{font-weight:700;fill:#191919;text-anchor:middle}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:4px 18px;flex:1;min-width:260px}
+.legend button{display:flex;gap:8px;align-items:center;text-align:left;border-color:transparent;padding:4px 8px}
+.legend button.on{background:var(--accbg);border-color:var(--acc)}
+.legend i{width:12px;height:12px;border-radius:3px;flex:none}.legend .nm{flex:1}.legend .pc{color:var(--mut);font-variant-numeric:tabular-nums}
+.sumline{color:var(--mut);margin-bottom:8px}.sumline b{color:#191919}.sumline b.bad{color:var(--warn)}
 .problems{margin:0 0 12px;padding:0;list-style:none}
 .problems li{padding:6px 10px;border-left:3px solid;margin-bottom:4px;background:#faf8f3}
 .problems .e{border-color:var(--err);color:var(--err)}.problems .w{border-color:var(--warn);color:var(--warn)}.problems .o{border-color:var(--acc);color:var(--acc)}
 .body{display:grid;grid-template-columns:340px 1fr;gap:20px;align-items:start}
 @media(max-width:820px){.body{grid-template-columns:1fr}}
-aside{border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:6px 10px 10px}
+aside{border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 3px #0000000f,0 4px 14px #00000008;background:var(--bg);padding:6px 10px 10px}
 .sec{padding:8px 0;border-bottom:1px solid var(--line)}
 .sec-h{display:flex;gap:6px;align-items:center;margin-bottom:4px}
 .sec-name{border-color:transparent;font-weight:600;padding:4px 6px}.sec-name:hover{border-color:var(--line)}
@@ -59,11 +63,11 @@ aside{border:1px solid var(--line);border-radius:6px;background:var(--bg);paddin
 .item .nm{flex:1}.item .w{min-width:28px;text-align:right;font-weight:600}
 .tag{font-size:12px;color:var(--mut);border:1px solid var(--line);border-radius:10px;padding:0 7px}
 .add{border:none;color:var(--acc);padding:6px 8px;background:none}
-section{border:1px solid var(--line);border-radius:6px;background:var(--bg);padding:16px}
+section{border:1px solid var(--line);border-radius:12px;box-shadow:0 1px 3px #0000000f,0 4px 14px #00000008;background:var(--bg);padding:16px}
 label{display:block;margin-bottom:12px;color:var(--mut)}
-label>input,label>select,label>textarea{margin-top:3px;color:#17211c}
+label>input,label>select,label>textarea{margin-top:3px;color:#191919}
 .row{display:flex;gap:12px;flex-wrap:wrap}.row>label{flex:0 1 160px}.row>label.grow{flex:1 1 260px}
-label.chk{display:flex;gap:8px;align-items:center;flex:0 0 auto;margin-top:22px;color:#17211c}
+label.chk{display:flex;gap:8px;align-items:center;flex:0 0 auto;margin-top:22px;color:#191919}
 label.chk input{width:auto;margin:0}
 .steps h3{margin:4px 0 6px;font-size:14px}
 .step{display:grid;grid-template-columns:80px 1fr 34px;gap:8px;margin-bottom:6px}
@@ -151,12 +155,20 @@ class CqaChecklistEditor extends HTMLElement {
       <button data-act="revert" ${dirty ? '' : 'disabled'}>${T.revert}</button>
       <button class="pri" data-act="save" ${dirty && !errors.length && !this.busy ? '' : 'disabled'}>${T.save}</button>`;
     const scored = c.criteria.filter(k => k.type !== 'flag');
-    const hues = ['#14633f', '#2b6f8f', '#7a5195', '#a1482f', '#5d6f1e', '#8a5300', '#3f4f9a', '#a0306a'];
+    const hues = ['#2a8640', '#4fb84e', '#0f5c2e', '#8ccf7e', '#1f6f8b', '#c99a2e', '#5c5c5c', '#3e9e9e'];
     const sum = this.weightSum();
-    const bar = scored.map((k, i) => `<div class="${k.id === this.sel ? 'on' : ''}" style="flex:${Math.max(+k.weight || 0, 0.001)};background:${hues[i % hues.length]}" title="${esc(k.name)}: ${fmt(+k.weight || 0)}">${(+k.weight || 0) >= 8 ? esc(k.name) : ''}</div>`).join('');
+    let off = 0;
+    const arcs = scored.map((k, i) => {
+      const pc = sum > 0 ? (+k.weight || 0) / sum * 100 : 0, a = `<circle class="${k.id === this.sel ? 'on' : ''}" r="15.915" cx="21" cy="21" stroke="${hues[i % hues.length]}" stroke-dasharray="${pc} ${100 - pc}" stroke-dashoffset="${25 - off}"><title>${esc(k.name)}: ${fmt(+k.weight || 0)}</title></circle>`;
+      off += pc; return a;
+    }).join('');
+    const legend = scored.map((k, i) => `<button class="${k.id === this.sel ? 'on' : ''}" data-act="select" data-id="${esc(k.id)}"><i style="background:${hues[i % hues.length]}"></i>
+      <span class="nm">${esc(k.name || '(без названия)')}</span><span class="pc">${fmt(+k.weight || 0)} · ${sum > 0 ? Math.round((+k.weight || 0) / sum * 100) : 0}%</span></button>`).join('');
+    const bar = `<svg class="donut" viewBox="0 0 42 42" role="img" aria-label="${T.sum}: ${fmt(sum)}"><circle r="15.915" cx="21" cy="21" stroke="#eceef0"></circle>${arcs}
+      <text x="21" y="21" font-size="7">${fmt(sum)}</text><text x="21" y="27" font-size="3.2" style="font-weight:400;fill:#5c5c5c">из 100</text></svg><div class="legend">${legend}</div>`;
     const msg = this.msg ? `<li class="${this.msg.t}">${esc(this.msg.s)}</li>` : '';
     this.$('#problems').innerHTML = `
-      <div class="share" aria-hidden="true">${bar}</div>
+      <div class="share">${bar}</div>
       <div class="sumline">${T.sum}: <b class="${Math.abs(sum - 100) > 1e-9 ? 'bad' : ''}">${fmt(sum)}</b> из 100. Критерии с N/A исключаются, их вес перераспределяется между остальными.</div>
       <ul class="problems">${msg}${errors.map(x => `<li class="e">${esc(x)}</li>`).join('')}${warnings.map(x => `<li class="w">${esc(x)}</li>`).join('')}</ul>`;
   }
