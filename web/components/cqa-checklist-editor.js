@@ -76,6 +76,12 @@ label.chk input{width:auto;margin:0}
 .actions .del{margin-left:auto;color:var(--err)}
 .lists{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid var(--line)}
 .lists select{width:auto;min-width:260px;font-weight:600}
+dialog.ask{border:0;border-radius:18px;padding:22px 22px 18px;width:min(420px,calc(100vw - 32px));box-shadow:0 20px 60px #0b2a1c40;color:#13231a}
+dialog.ask::backdrop{background:#0b2a1c59;backdrop-filter:blur(2px)}
+dialog.ask h3{margin:0 0 6px;font-size:18px}dialog.ask p{margin:0 0 12px;color:#5c5c5c}
+dialog.ask input{margin-bottom:4px}
+dialog.ask .btns{display:flex;justify-content:flex-end;gap:10px;margin-top:16px}
+dialog.ask button.danger{background:#d32f2f;border-color:#d32f2f;color:#fff}
 /* ---- theme layer ---- */
 :host{--line:#e3e9e5;--accg:linear-gradient(135deg,#178a3f,#43b75c);color:#13231a}
 h1,h2,h3{letter-spacing:-.01em;color:#0b2a1c}
@@ -303,9 +309,15 @@ class CqaChecklistEditor extends HTMLElement {
       let n = 1; while (c.sections.includes('Новая секция ' + n)) n++;
       c.sections.push('Новая секция ' + n);
     } else if (a === 'delsec') c.sections.splice(i, 1);
-    else if (a === 'del' && k && confirm(`Удалить критерий «${k.name}»?`)) {
-      const at = c.criteria.indexOf(k); c.criteria.splice(at, 1);
-      this.sel = (c.criteria[at] || c.criteria[at - 1])?.id ?? null;
+    else if (a === 'del' && k) {
+      this.ask({ title: 'Удалить критерий?', text: `«${k.name}» будет удалён из черновика. Сохранённые версии не изменятся.`, ok: 'Удалить', danger: true })
+        .then(yes => {
+          if (!yes) return;
+          const at = c.criteria.indexOf(k); c.criteria.splice(at, 1);
+          this.sel = (c.criteria[at] || c.criteria[at - 1])?.id ?? null;
+          this.msg = null; this.refresh(true);
+        });
+      return;
     } else if ((a === 'up' || a === 'down') && k) {
       const at = c.criteria.indexOf(k), step = a === 'up' ? -1 : 1;
       let j = at + step;
@@ -316,6 +328,25 @@ class CqaChecklistEditor extends HTMLElement {
     this.msg = null; this.refresh(true);
   }
 
+  /* In-app replacement for prompt()/confirm(): resolves to the entered text (value given), true, or null if cancelled. */
+  ask({ title, text = '', value = null, ok = 'OK', danger = false }) {
+    return new Promise(done => {
+      const d = document.createElement('dialog');
+      d.className = 'ask';
+      d.innerHTML = `<form method="dialog"><h3>${esc(title)}</h3>${text ? `<p>${esc(text)}</p>` : ''}
+        ${value !== null ? `<input name="v" value="${esc(value)}" maxlength="120" required aria-label="${esc(text || title)}">` : ''}
+        <div class="btns"><button type="button" data-cancel>Отмена</button><button value="ok" class="${danger ? 'danger' : 'pri'}">${esc(ok)}</button></div></form>`;
+      d.querySelector('[data-cancel]').addEventListener('click', () => d.close('cancel'));  // not a submit button: Enter confirms
+      d.addEventListener('close', () => {
+        const input = d.querySelector('input');
+        d.remove();
+        done(d.returnValue !== 'ok' ? null : input ? input.value.trim() || null : true);
+      });
+      this.root.append(d);
+      d.showModal();
+      d.querySelector('input')?.select();
+    });
+  }
   fail(e, what) { this.busy = false; this.msg = { t: 'e', s: `${what}: ${e.message}` }; this.paintMeta(); }
   announce(name, detail) { this.dispatchEvent(new CustomEvent(name, { detail, bubbles: true, composed: true })); }
   async api(path, method = 'GET', body) {
@@ -343,13 +374,15 @@ class CqaChecklistEditor extends HTMLElement {
     this.cid = id; this.sel = null; this.load(cfg, msg);
   }
   async switchTo(id) {
-    if (this.isDirty() && !confirm('Несохранённые изменения будут потеряны. Переключиться?')) { this.paintLists(); return; }
+    if (this.isDirty() && !await this.ask({ title: 'Переключить чек-лист?', text: 'Несохранённые изменения будут потеряны.', ok: 'Переключить', danger: true })) { this.paintLists(); return; }
     try { await this.open(id); } catch (e) { this.fail(e, 'Не удалось открыть чек-лист'); }
   }
   async createList(copy) {
-    const name = (prompt('Название чек-листа', copy ? `${this.state.name} (копия)` : 'Новый чек-лист') || '').trim();
+    const name = await this.ask({ title: copy ? 'Дублировать чек-лист' : 'Новый чек-лист', text: 'Название чек-листа',
+      value: copy ? `${this.state.name} (копия)` : 'Новый чек-лист', ok: copy ? 'Создать копию' : 'Создать' });
     if (!name) return;
-    if (this.isDirty() && !confirm('Несохранённые изменения текущего чек-листа будут потеряны (копия делается из сохранённой версии). Продолжить?')) return;
+    if (this.isDirty() && !await this.ask({ title: 'Продолжить без сохранения?', ok: 'Продолжить', danger: true,
+      text: 'Несохранённые изменения текущего чек-листа будут потеряны. Копия делается из сохранённой версии.' })) return;
     try {
       const cfg = await this.api('/api/checklists', 'POST', { name, copy_from: copy ? this.cid : null });
       this.lists = await this.api('/api/checklists');
@@ -359,7 +392,7 @@ class CqaChecklistEditor extends HTMLElement {
     } catch (e) { this.fail(e, 'Не удалось создать чек-лист'); }
   }
   async deleteList() {
-    if (!confirm(`Удалить чек-лист «${this.state.name}»? Прежние оценки сохранят ссылку на него.`)) return;
+    if (!await this.ask({ title: 'Удалить чек-лист?', text: `«${this.state.name}» исчезнет из списка. Прежние оценки сохранят ссылку на него.`, ok: 'Удалить', danger: true })) return;
     try {
       const gone = this.cid;
       await this.api('/api/checklists/' + gone, 'DELETE');
