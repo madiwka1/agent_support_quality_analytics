@@ -28,5 +28,5 @@ app.include_router(evaluate_router)
 app.include_router(appeals_router)
 app.include_router(agent_router)
 app.include_router(schedule.router)
-# Mounted last so /api/* routes win.
+
 app.mount("/", StaticFiles(directory=Path(__file__).parent.parent / "web", html=True), name="web")

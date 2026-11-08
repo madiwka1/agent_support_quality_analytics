@@ -1,11 +1,3 @@
-/* <cqa-app api-base="">
- * App shell: sidebar tabs + hash routing.
- *   #/evaluate            upload a transcript and run an evaluation  (<cqa-home>)
- *   #/dialogs[/<id>]      saved dialogs; a dialog card with its evaluations
- *   #/evaluations[/<id>]  all evaluations; one evaluation             (<cqa-result>)
- *   #/checklists[/<id>]   checklist editor                           (<cqa-checklist-editor>)
- * Load the other components' scripts first.
- */
 (() => {
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = n => String(Math.round(n * 100) / 100);
@@ -85,7 +77,7 @@ class CqaApp extends HTMLElement {
     this.panes = {}; this.edId = null; this.tok = null; this.trail = [];
     this.onHash = () => this.route();
     this.root.addEventListener('click', e => {
-      const t0 = e.composedPath()[0];  // close an open export menu on any click outside it or on its items
+      const t0 = e.composedPath()[0];  
       this.root.querySelectorAll('details.exp[open]').forEach(d => { if (!d.querySelector('summary').contains(t0)) d.open = false; });
       const back = e.composedPath()[0]?.closest?.('a.back');
       if (back && this.trail.length > 1) { e.preventDefault(); history.back(); return; }

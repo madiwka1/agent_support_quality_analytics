@@ -1,6 +1,6 @@
 """AI helper for the checklist constructor: a free-text request -> a checklist draft.
 
-The model only drafts JSON. The draft is normalized and validated here with the same Checklist model
+Only drafts JSON. The draft is normalized and validated here with the same Checklist model
 that versions are saved with, and it is never stored: the constructor loads it as unsaved changes.
 """
 import json
@@ -37,7 +37,7 @@ SYSTEM = """Ты помогаешь сотруднику оценки качес
 
 
 _STR = {"type": "string", "maxLength": 600}
-# Grammar-constrained decoding (vLLM + xgrammar): the model cannot answer with another shape.
+
 SCHEMA = {
     "type": "object", "additionalProperties": False,
     "required": ["notes", "name", "sections", "criteria"],
@@ -79,12 +79,12 @@ def _ask(messages: list[dict], max_tokens: int) -> str:
 
 class AgentRequest(BaseModel):
     prompt: str = Field(min_length=3, max_length=2000)
-    current: dict | None = None  # the constructor's state; None = build from scratch
+    current: dict | None = None
 
 
 def _normalize(raw: dict, settings: dict) -> dict:
     """Mechanical fixes the model often gets wrong; real rule violations are left to validation."""
-    if "criteria" not in raw:  # {"checklist": {...}} and similar wrappers
+    if "criteria" not in raw:
         raw = next((v for v in raw.values() if isinstance(v, dict) and "criteria" in v), raw)
     crit = [c for c in raw.get("criteria") or [] if isinstance(c, dict)]
     ids = [str(c.get("id", "")) for c in crit]
@@ -144,9 +144,8 @@ def draft_checklist(req: AgentRequest):
             draft = Checklist.model_validate(_normalize(raw, settings)).model_dump(exclude={"version", "created_at"})
             weights = sum(c["weight"] for c in draft["criteria"] if c["type"] != "flag")
             return {"checklist": draft, "notes": str(raw.get("notes") or "")[:500], "weight_sum": weights}
-        except ValueError as e:  # bad JSON or ValidationError (a ValueError subclass)
+        except ValueError as e:
             errors = _errors(e) if isinstance(e, ValidationError) else f"ответ не является корректным JSON ({e})"
             log.warning("agent draft rejected: %s | model answer: %s", errors, " ".join(text[:1500].split()))
-        # the previous answer is not resent: at 6144 tokens it would crowd out the request itself
         messages = messages[:2] + [{"role": "user", "content": f"Прошлый вариант не принят: {errors}. Учти это и верни JSON целиком."}]
     raise HTTPException(502, "Модель не смогла составить корректный чек-лист: " + errors)

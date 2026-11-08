@@ -23,7 +23,7 @@ class Criterion(BaseModel):
     name: str
     description: str = ""
     section: str
-    type: Literal["yesno", "scale", "flag"]  # flag: "yes" = violation found, no points
+    type: Literal["yesno", "scale", "flag"]
     weight: float = Field(ge=0)
     scale: list[ScaleStep] | None = None
     na_allowed: bool = False

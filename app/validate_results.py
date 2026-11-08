@@ -15,8 +15,7 @@ SCHEMA = "1.0"
 ROOT = Path(__file__).resolve().parent.parent
 MODES = {"local", "external_api", "hybrid"}
 
-# The single mapping between the base checklist (internal ids) and the organizers' codes.
-# code, internal id, type in the checklist, allowed values (None = N/A), weight
+
 CRITERIA = [
     ("contact", "c1", "yesno", {True, False}, 10),
     ("discovery", "c2", "yesno", {True, False, None}, 15),
@@ -57,7 +56,6 @@ def _is_int(x) -> bool:
 
 
 def _same(v, allowed: set) -> bool:
-    # True == 1 in Python, so match types as well as values
     return any(v is a if a is None or isinstance(a, bool) else (_is_int(v) and v == a) for a in allowed)
 
 

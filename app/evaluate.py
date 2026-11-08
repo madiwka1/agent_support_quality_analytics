@@ -1,16 +1,3 @@
-"""Evaluation of a conversation against a checklist version.
-
-The LLM only judges each criterion (answer + explanation + evidence message numbers).
-All arithmetic (weights, N/A redistribution, rounding, sections) is done here in code,
-using the `settings` stored in the checklist version.
-
-Env:
-  CQA_LLM_URL      base URL of the OpenAI-compatible API, e.g. http://<host>:<port>/v1
-  CQA_LLM_KEY      bearer token (do NOT commit it)
-  CQA_LLM_MODEL    model id; if empty, the first model from GET /models is used
-  CQA_LLM_TIMEOUT  seconds per call (default 300)
-  CQA_LLM_CTX      model context, prompt + answer, in tokens (default 6144)
-"""
 import json
 import os
 import re
@@ -101,7 +88,7 @@ class ContextTooLong(Exception):
     pass
 
 
-# ---------------------------------------------------------------- LLM client
+
 def _http(path: str, body: dict | None = None, base: str | None = None) -> dict:
     if not LLM_URL:
         raise LLMError(0, "CQA_LLM_URL не задан (.env)")
@@ -148,7 +135,7 @@ def _chat(messages: list[dict], max_tokens: int = OUT_TOKENS) -> str:
     except LLMError as e:
         if e.code not in (400, 422) or e.context_overflow:
             raise
-        body.pop("response_format")  # server without JSON mode
+        body.pop("response_format")
         data = _http("/chat/completions", body)
     try:
         return data["choices"][0]["message"]["content"] or ""
@@ -165,7 +152,7 @@ def _parse_json(text: str):
     return json.loads(text[a:b + 1])
 
 
-# ---------------------------------------------------------------- prompt
+
 def _criteria_text(cfg: dict, short: bool = False) -> str:
     out = []
     for k in cfg["criteria"]:
@@ -198,7 +185,7 @@ def _levels(cd: CleanDialog) -> list[tuple[bool, tuple[int, int] | None]]:
     return [(False, None), (True, None), (True, (start, len(cd.turns)))]
 
 
-# ---------------------------------------------------------------- validation
+
 _YES, _NO, _NA = {"yes", "да", "true", "y"}, {"no", "нет", "false", "n"}, {"na", "n/a", "н/а", "none", "null"}
 
 
@@ -258,7 +245,7 @@ def _normalize(raw, cfg: dict, cd: CleanDialog, tr: list[dict]) -> tuple[dict, l
             except (TypeError, ValueError):
                 errors.append(f'{k["id"]}: answer должен быть одной из ступеней {vals}')
                 continue
-            it["answer"], it["value"] = "score", min(vals, key=lambda x: abs(x - v))  # snap to nearest step
+            it["answer"], it["value"] = "score", min(vals, key=lambda x: abs(x - v))
         if not str(r.get("explanation") or "").strip():
             errors.append(f'{k["id"]}: пустое объяснение')
             continue
@@ -318,7 +305,7 @@ def _not_evaluated(cfg: dict, reason: str) -> dict:
                       "evidence": [], "checked_range": None} for k in cfg["criteria"]}
 
 
-# ---------------------------------------------------------------- scoring
+
 def score(cfg: dict, items: dict) -> dict:
     st = cfg.get("settings") or {}
     nd, mx = int(st.get("rounding", 2)), float(st.get("max_total", 100))
@@ -360,7 +347,7 @@ def score(cfg: dict, items: dict) -> dict:
     }
 
 
-# ---------------------------------------------------------------- storage + API
+
 def _db() -> sqlite3.Connection:
     con = sqlite3.connect(DB_PATH)
     con.row_factory = sqlite3.Row
@@ -373,7 +360,7 @@ def _db() -> sqlite3.Connection:
 class EvaluateRequest(BaseModel):
     conversation_id: str
     checklist_id: int
-    version: int | None = None  # None = latest; the resolved number is stored
+    version: int | None = None
 
 
 @router.post("")
@@ -408,7 +395,7 @@ def evaluate(req: EvaluateRequest):
         con.execute("INSERT INTO evaluations VALUES(?, ?, ?, ?, ?, ?)",
                     (result["id"], result["conversation_id"], cfg["id"], cfg["version"], result["created_at"],
                      json.dumps(result, ensure_ascii=False)))
-    try:  # keep results/<dataset>/results.json current; a failed refresh must not fail the evaluation
+    try:  
         from app.export_results import refresh_for
         for path in refresh_for(req.conversation_id):
             log.info("results refreshed: %s", path)
@@ -424,7 +411,7 @@ def list_evaluations(conversation_id: str | None = None):
         q, args = q + " WHERE conversation_id = ?", [conversation_id]
     with _db() as con:
         rows = con.execute(q + " ORDER BY created_at DESC", args).fetchall()
-        try:  # each resolved appeal stores the rescored result with all decisions so far; the latest wins
+        try:  
             appealed = {a["evaluation_id"]: json.loads(a["result_json"]) for a in con.execute(
                 "SELECT evaluation_id, result_json FROM appeals WHERE result_json IS NOT NULL ORDER BY resolved_at, rowid")}
         except sqlite3.OperationalError:

@@ -18,7 +18,7 @@ from app.checklist import DB_PATH
 from app.clean import clean_dialog
 from app.validate_results import CRITERIA, ROOT, SCHEMA, TEAM, final_score, load_dataset
 
-_LOCK = threading.Lock()  # batch evaluation runs 2 threads that may refresh the same file
+_LOCK = threading.Lock()
 CLOUD_HOSTS = ("openai.com", "anthropic.com", "googleapis.com", "groq.com", "openrouter.ai", "together.xyz",
                "mistral.ai", "deepseek.com", "x.ai", "azure.com", "cohere.com", "fireworks.ai")
 
@@ -41,7 +41,7 @@ def _versions() -> dict[tuple[int, int], dict]:
     with sqlite3.connect(DB_PATH) as con:
         rows = con.execute("SELECT checklist_id, checklist_version FROM evaluations GROUP BY 1, 2").fetchall()
         out = {}
-        for cid, ver in rows:  # deleted checklists still count: their evaluations stay valid
+        for cid, ver in rows:
             r = con.execute("SELECT config_json FROM checklist_versions WHERE checklist_id = ? AND version = ?", (cid, ver)).fetchone()
             if r:
                 out[(cid, ver)] = json.loads(r[0])
@@ -102,7 +102,7 @@ def build_record(rec: dict, ev: dict, warns: list[str]) -> dict:
         if not any(v is a if a is None or isinstance(a, bool) else (type(v) is int and v == a) for a in allowed):
             return {"conversation_id": cid, "status": "error", "criteria": [], "score": None,
                     "error": f"{code}: значение {v!r} вне допустимых для формата"}
-        # a merged (cleaned) turn gives all of its source messages; older evaluations point at single messages
+        
         src = [j for x in k["evidence"] for j in (groups.get(x["index"], [x["index"]]) if "index_to" in x else [x["index"]])]
         if not src and k.get("checked_range"):
             src = range(k["checked_range"]["from"], k["checked_range"]["to"] + 1)
@@ -123,7 +123,7 @@ def build_record(rec: dict, ev: dict, warns: list[str]) -> dict:
 
 def model_block(evs: list[dict]) -> dict:
     names = sorted({e["model"] for e in evs if e.get("model")}) or [os.getenv("CQA_LLM_MODEL") or "не определена"]
-    # evaluations before llm_host was recorded all ran on the team's own vLLM server
+    
     cloud = {any(str(e.get("llm_host") or "").endswith(h) for h in CLOUD_HOSTS) for e in evs} or {False}
     return {"mode": "hybrid" if cloud == {True, False} else "external_api" if cloud == {True} else "local",
             "name": ", ".join(names)}
@@ -162,7 +162,7 @@ def export(dataset: str, group_id: str | None = None, version: str | None = None
 
 
 def _final(ev: dict) -> dict:
-    from app.appeals import _cfg, _final as final  # imported lazily: pulls in the LLM client config
+    from app.appeals import _cfg, _final as final
     return final(ev, _cfg(ev))
 
 
@@ -193,7 +193,7 @@ def refresh_for(conversation_id: str) -> list[Path]:
 
 def write(doc: dict, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")  # write then rename: readers never see half a file
+    fd, tmp = tempfile.mkstemp(dir=path.parent, suffix=".tmp")
     with os.fdopen(fd, "w", encoding="utf-8", newline="\n") as f:
         f.write(json.dumps(doc, ensure_ascii=False, indent=2, allow_nan=False) + "\n")
     os.replace(tmp, path)

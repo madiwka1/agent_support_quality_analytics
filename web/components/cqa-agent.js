@@ -1,8 +1,3 @@
-/* <cqa-agent api-base="">
- * Floating AI helper for the checklist constructor. The user's request goes to POST /api/agent/checklist
- * (with the constructor's current state unless "from scratch" is chosen); the returned draft is loaded into
- * the sibling <cqa-checklist-editor> as unsaved changes, so nothing is stored until the user saves.
- */
 (() => {
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const EXAMPLES = [
@@ -97,7 +92,7 @@ class CqaAgent extends HTMLElement {
     this.root.addEventListener('keydown', e => { if (e.key === 'Escape') this.toggle(false); });
   }
   disconnectedCallback() { this.ctrl?.abort(); clearInterval(this.timer); clearTimeout(this.idle); clearTimeout(this.away); }
-  wake() {  // after 5 s without touching it only the bird stays; it never shrinks while open or busy
+  wake() { 
     this.$('.fab').classList.remove('mini');
     clearTimeout(this.idle);
     this.idle = setTimeout(() => { const f = this.$('.fab'); if (this.$('#panel').hidden && !this.ctrl && !f.matches(':hover')) f.classList.add('mini'); else this.wake(); }, 5000);
@@ -118,7 +113,7 @@ class CqaAgent extends HTMLElement {
     if (open) this.$('#q').focus();
     this.wake(); this.poke();
   }
-  poke() {  // the open panel closes after 4 s without use, but not while the model works or the pointer is over it
+  poke() {  
     clearTimeout(this.away);
     if (this.$('#panel').hidden) return;
     this.away = setTimeout(() => {

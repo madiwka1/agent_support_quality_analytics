@@ -1,7 +1,3 @@
-/* <cqa-appeals api-base="" appeal-id="">
- * Reviewer side. Without appeal-id: list of appeals. With appeal-id: appeal card with the disputed criteria,
- * the author's comments, dialog fragments, and a decision form (reject / accept with a new answer) + reason.
- */
 (() => {
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const fmt = n => String(Math.round(n * 100) / 100);

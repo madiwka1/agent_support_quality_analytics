@@ -17,7 +17,7 @@ from app.checklist import DB_PATH
 from app.evaluate import log
 
 router = APIRouter(prefix="/api/schedule", tags=["schedule"])
-WINDOW = timedelta(hours=1)  # a run missed by more than this (server was off) waits for the next day
+WINDOW = timedelta(hours=1)
 _lock = threading.Lock()
 _state = {"running": False, "done": 0, "total": 0, "current": None, "trigger": None}
 
@@ -61,7 +61,7 @@ def _next_run(cfg: Schedule, now: datetime) -> str | None:
 
 
 def _job(cfg: Schedule, trigger: str) -> None:
-    from app import batch  # heavy imports only when a run actually starts
+    from app import batch
     from app.validate_results import load_dataset
 
     started, ok, failed = datetime.now(), 0, 0
@@ -82,7 +82,7 @@ def _job(cfg: Schedule, trigger: str) -> None:
                 raise RuntimeError(f"сохранённый набор относится к {data.get('dataset_group_id')}, а не к {cfg.group_id}")
         batch.run(cfg.dataset, data["records"], batch.base_version(None), only_missing=True, workers=1, progress=progress)
         last.update(status="ok" if not failed else "partial", evaluated=ok, errors=failed, total=len(data["records"]))
-    except (Exception, SystemExit) as e:  # batch helpers stop with SystemExit on configuration problems
+    except (Exception, SystemExit) as e:
         log.error("scheduled evaluation failed: %s", e)
         last.update(status="error", evaluated=ok, errors=failed, message=str(e)[:300])
     finally:

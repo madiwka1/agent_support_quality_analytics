@@ -229,7 +229,7 @@ def decide(aid: str, body: DecisionBody):
         status = "accepted" if accepted == len(items) else "rejected" if accepted == 0 else "partial"
         con.execute("UPDATE appeals SET status = ?, resolved_at = ?, reviewer = ?, items_json = ? WHERE id = ?",
                     (status, _now(), body.reviewer.strip(), json.dumps(items, ensure_ascii=False), aid))
-    fin = _final(ev, cfg)  # after commit, so it includes this decision
+    fin = _final(ev, cfg)
     with _db() as con:
         con.execute("UPDATE appeals SET result_json = ? WHERE id = ?",
                     (json.dumps({"total": fin["total"], "max_total": fin["max_total"],

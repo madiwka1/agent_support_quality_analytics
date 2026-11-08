@@ -13,10 +13,8 @@
 </head>
 <body>
   <a class="back" href="/" onclick="if (history.length > 1) { history.back(); return false; }">Назад</a>
-  <!-- api-base is empty when served by FastAPI; set it to the backend URL inside Dynamics 365. -->
   <cqa-checklist-editor api-base=""></cqa-checklist-editor>
   <script>
-    // Open the checklist chosen on the homepage (?id=3).
     const id = new URLSearchParams(location.search).get('id');
     if (id) document.querySelector('cqa-checklist-editor').setAttribute('checklist-id', id);
   </script>

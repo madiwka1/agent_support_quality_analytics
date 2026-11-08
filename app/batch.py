@@ -24,7 +24,7 @@ from app.evaluate import EvaluateRequest, evaluate
 from app.export_results import base_problem, latest_evaluations, parse_version
 from app.validate_results import ROOT, dataset_path, load_dataset
 
-WORKERS = 2  # the vLLM server runs 2 requests at a time; --workers 1 leaves a slot free for the UI
+WORKERS = 2
 
 
 def fetch(dataset: str, group_id: str) -> dict:
@@ -56,7 +56,7 @@ def base_version(arg: str | None) -> tuple[int, int]:
         rows = con.execute("SELECT v.checklist_id, v.version, v.config_json FROM checklist_versions v "
                            "JOIN checklist_meta m ON m.id = v.checklist_id WHERE m.deleted = 0 "
                            "ORDER BY v.checklist_id, v.version DESC").fetchall()
-    for cid, ver, js in rows:  # the first checklist's latest base version
+    for cid, ver, js in rows:
         if base_problem(json.loads(js)) is None:
             return cid, ver
     raise SystemExit("Нет чек-листа с базовыми 8 критериями. Укажите --checklist-version ЧЕКЛИСТ:ВЕРСИЯ.")
