@@ -24,7 +24,7 @@ from app.evaluate import EvaluateRequest, evaluate
 from app.export_results import base_problem, latest_evaluations, parse_version
 from app.validate_results import ROOT, dataset_path, load_dataset
 
-WORKERS = 2  # the vLLM server runs 2 requests at a time
+WORKERS = 2  # the vLLM server runs 2 requests at a time; --workers 1 leaves a slot free for the UI
 
 
 def fetch(dataset: str, group_id: str) -> dict:
@@ -62,12 +62,16 @@ def base_version(arg: str | None) -> tuple[int, int]:
     raise SystemExit("Нет чек-листа с базовыми 8 критериями. Укажите --checklist-version ЧЕКЛИСТ:ВЕРСИЯ.")
 
 
-def run(dataset: str, records: list, version: tuple[int, int], only_missing: bool) -> dict:
+def run(dataset: str, records: list, version: tuple[int, int], only_missing: bool, workers: int = WORKERS,
+        progress=None) -> dict:
+    """progress(done, total, conversation_id, error) is called before the first and after every dialog."""
     errs_path = ROOT / "datasets" / f"{dataset}.errors.json"
     errors = json.loads(errs_path.read_text(encoding="utf-8")) if errs_path.exists() else {}
     done = latest_evaluations(version) if only_missing else {}
     todo = [r for r in records if not (r["conversation_id"] in done and not done[r["conversation_id"]].get("incomplete"))]
     print(f"Чек-лист {version[0]}, версия {version[1]}. К оценке: {len(todo)} из {len(records)}")
+    if progress:
+        progress(0, len(todo), None, None)
 
     def one(rec: dict) -> tuple[str, str | None, str]:
         cid, t0 = rec["conversation_id"], time.time()
@@ -82,7 +86,7 @@ def run(dataset: str, records: list, version: tuple[int, int], only_missing: boo
         except HTTPException as e:
             return cid, str(e.detail), f"{time.time() - t0:.0f} с"
 
-    with ThreadPoolExecutor(WORKERS) as pool:
+    with ThreadPoolExecutor(workers) as pool:
         for n, fut in enumerate(as_completed([pool.submit(one, r) for r in todo]), 1):
             cid, err, info = fut.result()
             if err:
@@ -90,6 +94,8 @@ def run(dataset: str, records: list, version: tuple[int, int], only_missing: boo
             else:
                 errors.pop(cid, None)
             print(f"[{n}/{len(todo)}] {cid}: {'ОШИБКА ' + err if err else 'ok'} {info}", flush=True)
+            if progress:
+                progress(n, len(todo), cid, err)
             errs_path.parent.mkdir(exist_ok=True)
             errs_path.write_text(json.dumps(errors, ensure_ascii=False, indent=1) + "\n", encoding="utf-8")
     print(f"Готово. С ошибками: {len(errors)}")
@@ -103,6 +109,7 @@ def main(argv=None) -> int:
     ap.add_argument("--fetch", action="store_true", help="заново загрузить набор по API")
     ap.add_argument("--only-missing", action="store_true", help="оценить только диалоги без полной оценки")
     ap.add_argument("--checklist-version")
+    ap.add_argument("--workers", type=int, default=WORKERS, help="сколько диалогов оценивать одновременно")
     a = ap.parse_args(argv)
     if a.fetch:
         if not a.group_id:
@@ -110,7 +117,7 @@ def main(argv=None) -> int:
         data = fetch(a.dataset, a.group_id)
     else:
         data = load_dataset(a.dataset)
-    run(a.dataset, data["records"], base_version(a.checklist_version), a.only_missing)
+    run(a.dataset, data["records"], base_version(a.checklist_version), a.only_missing, max(1, a.workers))
     return 0
 
 

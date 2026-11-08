@@ -42,6 +42,7 @@ th,td{padding:9px 12px;border-top:1px solid var(--line);text-align:left;font-wei
 thead th{border-top:0;color:#178a3f;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;background:#eef8f1;padding:13px 12px}
 s.was{color:var(--mut)}
 td.n,th.n{text-align:right}td.t{color:var(--mut)}
+td.open-link{text-align:right;width:1%}
 tr[data-href]{cursor:pointer}tr[data-href]:hover td{background:var(--accbg)}
 td.x{overflow:visible}.panel:has(details[open]){overflow:visible}
 .exp{position:relative;display:inline-block}.exp summary{list-style:none;cursor:pointer;color:var(--acc);font-weight:600;padding:3px 10px;border:1px solid var(--acc);border-radius:999px;font-size:13px}
@@ -131,7 +132,7 @@ class CqaApp extends HTMLElement {
 
   /* ---------- Новая оценка ---------- */
   show_evaluate(p) {
-    if (!p.firstChild) p.innerHTML = `<cqa-home api-base="${esc(this.apiBase)}"></cqa-home>`;
+    if (!p.firstChild) p.innerHTML = `<cqa-schedule api-base="${esc(this.apiBase)}"></cqa-schedule><cqa-home api-base="${esc(this.apiBase)}"></cqa-home>`;
   }
 
   /* ---------- Чек-листы ---------- */
@@ -164,11 +165,12 @@ class CqaApp extends HTMLElement {
       return `<tr data-href="#/dialogs/${enc(id)}"><td><a href="#/dialogs/${enc(id)}">${esc(id)}</a></td>
         <td>${CHAN[c.channel] || esc(c.channel)}</td><td>${esc(c.language)}</td><td class="n">${c.messages}</td>
         <td class="t">${when(c.created_at)}</td>
-        <td class="n">${es.length ? `${es.length}, последняя: ${score(es[0])}` : '—'}</td></tr>`;
+        <td>${es.length ? `${es.length}, последняя: ${score(es[0])}` : '—'}</td>
+        <td class="open-link"><a href="#/dialogs/${enc(id)}">Анализ</a></td></tr>`;
     }).join('');
     return `<div class="page"><div class="top"><div><h1>Диалоги</h1><p class="sub">Загруженные диалоги: ${cs.length}</p></div>
       <a class="btn pri" href="#/evaluate">+ Новая оценка</a></div>
-      <div class="panel">${cs.length ? `<table><thead><tr><th>Диалог</th><th>Канал</th><th>Язык</th><th class="n">Реплик</th><th>Загружен</th><th class="n">Оценки</th></tr></thead><tbody>${rows}</tbody></table>`
+      <div class="panel">${cs.length ? `<table><thead><tr><th>Диалог</th><th>Канал</th><th>Язык</th><th class="n">Реплик</th><th>Загружен</th><th>Оценки</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
         : '<div class="empty">Диалогов пока нет. <a href="#/evaluate">Загрузите первый</a>.</div>'}</div></div>`;
   }
   dialogCard(c, evs, evId) {

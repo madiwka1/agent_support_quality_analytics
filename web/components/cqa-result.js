@@ -55,6 +55,7 @@ button.pri{background:var(--acc);border-color:var(--acc);color:#fff;font-weight:
 .rev.yes{border-color:var(--acc);background:var(--accbg)}.rev.no{border-color:var(--err);background:#fdecec}.rev.wait{border-color:var(--warn);background:#fff4e0}
 .pick{display:flex;gap:8px;align-items:center;margin-top:8px;font-weight:600;color:var(--acc);cursor:pointer}
 .abox textarea{width:100%;margin-top:6px;padding:8px 9px;border:1px solid var(--line);border-radius:10px;font:inherit;resize:vertical}
+.foot{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:center;gap:12px;border-top:1px solid var(--line);padding-top:14px;color:var(--mut)}
 .abar{position:sticky;bottom:0;display:flex;flex-wrap:wrap;gap:10px 14px;align-items:center;background:#fff;border-top:1px solid var(--line);padding:12px 0 0;margin-top:8px}
 .aerr{color:var(--err);flex:1}
 .chips{display:flex;flex-direction:column;gap:4px;margin-top:6px}
@@ -182,13 +183,14 @@ class CqaResult extends HTMLElement {
         <div class="head"><div class="total">${this.gauge(e)}<small>из ${fmt(e.max_total)}</small></div>
           <span class="pill ${e.gross_violation ? 'bad' : 'ok'}">${e.gross_violation ? 'Грубое нарушение выявлено' : 'Грубых нарушений не выявлено'}</span>
           ${e.incomplete ? '<span class="pill bad">Оценка неполная</span>' : ''}
-          ${this.mode ? '' : '<button class="btn" data-act="appeal">Оспорить оценку</button>'}</div>
+          ${this.mode ? '' : '<button class="btn" data-act="appeal" data-jump>Оспорить оценку</button>'}</div>
         ${e.changed ? `<div class="was">Итог пересчитан по результатам апелляции. Исходный итог: <b>${e.original_total == null ? '—' : fmt(e.original_total)}</b>.</div>` : ''}
         ${this.note ? `<div class="note ${this.note.t}">${esc(this.note.s)}${this.note.link ? ' <a href="#/appeals">Открыть апелляции</a>' : ''}</div>` : ''}
         <div class="meta">Диалог ${esc(e.conversation_id)} · чек-лист «${esc(e.checklist_name)}», версия ${e.checklist_version} · модель ${esc(e.model || '')}${e.prompt_tokens ? ` · промпт ${e.prompt_tokens} ток., сжатие ${e.compression_level}` : ''}</div>
         ${e.summary ? `<div class="sum"><b>Общий вывод</b>${esc(e.summary)}</div>` : ''}
         ${this.mode ? '<p class="meta">Отметьте критерии, с которыми вы не согласны, и опишите причину для каждого.</p>' : ''}
         <div class="secs">${secs_}</div>${crit}
+        ${this.mode ? '' : '<div class="foot"><span>Не согласны с оценкой?</span><button class="btn" data-act="appeal">Оспорить оценку</button></div>'}
         ${this.mode ? `<div class="abar"><span>Выбрано критериев: <b id="cnt">0</b></span><span class="aerr" id="aerr"></span>
           <button data-act="cancel">Отмена</button><button class="pri" data-act="submit">Отправить апелляцию</button></div>` : ''}</div>
       <div class="panel tr"><h2>Транскрипт</h2>${this.err ? `<p class="err">${esc(this.err)}</p>` : ''}<cqa-chat api-base="${esc(this.apiBase)}"></cqa-chat></div></div>`;
@@ -199,7 +201,11 @@ class CqaResult extends HTMLElement {
     const b = e.target.closest('[data-from]');
     if (b) return this.goto(+b.dataset.from, +b.dataset.to);
     const a = e.target.closest('[data-act]')?.dataset.act;
-    if (a === 'appeal') { this.mode = true; this.note = null; this.render(); }
+    if (a === 'appeal') {
+      const jump = e.target.closest('[data-jump]');  // the top button takes the user to the form at the bottom
+      this.mode = true; this.note = null; this.render();
+      if (jump) [...this.root.querySelectorAll('.cr')].at(-1)?.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }
     else if (a === 'cancel') { this.mode = false; this.render(); }
     else if (a === 'submit') this.submit();
   }
