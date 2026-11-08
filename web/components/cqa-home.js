@@ -144,7 +144,7 @@ class CqaHome extends HTMLElement {
         <div class="panel"><h2>2. Транскрипт</h2>
           <label class="drop"><input type="file" hidden accept=".json,.txt,.log,application/json,text/plain">
             <strong>Перетащите файл или нажмите, чтобы выбрать</strong>
-            <span>JSON в формате API организаторов или текст со строками «оператор: текст»</span></label>
+            <span>JSON или текст со строками «оператор: текст»</span></label>
           <details><summary>Вставить текст вместо файла</summary>
             <textarea id="paste" rows="6" placeholder="[00:02] operator: Здравствуйте!&#10;[00:15] client: Добрый день, хочу узнать тариф"></textarea>
             <button data-act="parse">Прочитать текст</button></details>
